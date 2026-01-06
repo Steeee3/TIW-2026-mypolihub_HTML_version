@@ -9,4 +9,5 @@ import it.polimi.mypolihub.entity.User;
 public interface UserRepository extends JpaRepository<User, Integer> {
     long countBy();
     Optional<User> findByEmail(String email);
+    boolean existsByEmail(String email);
 }
