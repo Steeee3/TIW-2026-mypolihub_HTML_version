@@ -20,6 +20,10 @@ public class SecurityConfig {
         )
         .formLogin(withDefaults())
         .logout(withDefaults());
+        // .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
+        // .csrf(csrf -> csrf.disable())
+        // .formLogin(form -> form.disable())
+        // .httpBasic(basic -> basic.disable());
 
         return http.build();
     }

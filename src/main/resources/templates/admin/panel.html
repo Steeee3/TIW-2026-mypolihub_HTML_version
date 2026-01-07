@@ -1,253 +1,326 @@
 <!DOCTYPE html>
-<html lang="it">
+<html lang="it" xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Panel</title>
+    <link rel="stylesheet" href="/css/adminPanel.css">
 </head>
+
 <body>
     <div class="container">
 
-    <!-- TOP BAR -->
-    <div class="topbar">
-      <div class="brand">
-        <div class="logo">MP</div>
-        <div class="title">
-          <h1>MyPoliHub · Admin Panel</h1>
-          <span>Gestione rapida: import utenti e creazione corsi</span>
+        <!-- TOP BAR -->
+        <div class="topbar">
+            <div class="brand">
+                <div class="logo">MP</div>
+                <div class="title">
+                    <h1>MyPoliHub · Admin Panel</h1>
+                    <span>Gestione rapida: import utenti e creazione corsi</span>
+                </div>
+            </div>
+
+            <div class="quick-actions">
+                <!-- link utili -->
+                <a class="btn btn-accent" th:href="@{/home}">
+                    <span class="icon orange"></span> Home
+                </a>
+                <a class="btn" th:href="@{/logout}">
+                    <span class="icon"></span> Logout
+                </a>
+            </div>
         </div>
-      </div>
 
-      <div class="quick-actions">
-        <!-- link utili -->
-        <a class="btn" th:href="@{/home}">
-          <span class="icon"></span> Home
-        </a>
-        <a class="btn" th:href="@{/logout}">
-          <span class="icon"></span> Logout
-        </a>
-        <!-- CTA principale -->
-        <a class="btn btn-accent" th:href="@{/admin/import-users}">
-          <span class="icon orange"></span> Import Users
-        </a>
-      </div>
-    </div>
+        <!-- IMPORT REPORT -->
+        <div th:if="${report != null}" class="card mini" style="margin-top:16px;">
+            <h3>Report import</h3>
 
-    <div class="grid">
-
-      <!-- MAIN AREA -->
-      <div class="card">
-        <div class="card-header">
-          <div>
-            <h2 class="card-title">Gestione utenti</h2>
-            <p class="card-sub">
-              Carica un file <strong>.txt</strong> con <em>una riga per utente</em> (es. <code>Nome Cognome</code>).
-              La password verrà hashata dal backend.
+            <p>
+                Creati: <strong th:text="${report.created}">0</strong>
+                · Saltati: <strong th:text="${report.skipped}">0</strong>
             </p>
-          </div>
-          <span class="pill">Import da file</span>
+
+            <div th:if="${report.errors != null and !report.errors.isEmpty()}">
+                <h4 style="margin: 10px 0 6px;">Errori</h4>
+                <ul>
+                    <li th:each="e : ${report.errors}" th:text="${e}"></li>
+                </ul>
+            </div>
+
+            <p th:if="${report.errors == null or report.errors.isEmpty()}" style="opacity:.8;">
+                Nessun errore
+            </p>
         </div>
 
-        <div class="card-body">
+        <div class="grid">
 
-          <!-- SECTION: ADD ADMINS -->
-          <section class="card" style="box-shadow:none; background: rgba(255,255,255,.03);">
-            <div class="card-header">
-              <div>
-                <h3 class="card-title">Aggiungi Admin</h3>
-                <p class="card-sub">Importa una lista di admin da file oppure crea manualmente.</p>
-              </div>
-              <span class="pill"><span class="icon purple"></span>&nbsp;ROLE_ADMIN</span>
-            </div>
-
-            <div class="card-body">
-              <form th:action="@{/admin/import-users}" method="post" enctype="multipart/form-data">
-                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-                <input type="hidden" name="role" value="ADMIN" />
-
-                <div class="row">
-                  <div class="field">
-                    <div class="label">File (txt)</div>
-                    <input type="file" name="file" accept=".txt,text/plain" required />
-                    <div class="help">Formato riga: <code>Nome Cognome</code> (cognome può essere composto).</div>
-                  </div>
-                  <div class="field">
-                    <div class="label">Password default (DEV)</div>
-                    <input type="text" name="defaultPassword" value="password" required />
-                    <div class="help">Consigliato: obbligo cambio password al primo login (backend).</div>
-                  </div>
+            <!-- MAIN AREA -->
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <h2 class="card-title">Gestione utenti</h2>
+                        <p class="card-sub">
+                            Carica un file <strong>.txt</strong> con <em>una riga per utente</em> (es.
+                            <code>Nome Cognome</code>).
+                            La password verrà hashata dal backend.
+                        </p>
+                    </div>
+                    <span class="pill">Import da file</span>
                 </div>
 
-                <div class="actions">
-                  <button class="btn btn-accent" type="submit">
-                    <span class="icon purple"></span> Importa Admin
-                  </button>
-                  <a class="btn" th:href="@{/admin/users/new(role='ADMIN')}">
-                    <span class="icon"></span> Aggiungi manualmente
-                  </a>
+                <div class="card-body">
+
+                    <!-- SECTION: ADD ADMINS -->
+                    <section class="card" style="box-shadow:none; background: rgba(255,255,255,.03);">
+                        <div class="card-header">
+                            <div>
+                                <h3 class="card-title">Aggiungi Admin</h3>
+                                <p class="card-sub">Importa una lista di admin da file oppure crea manualmente.</p>
+                            </div>
+                            <span class="pill"><span class="icon purple"></span>&nbsp;ROLE_ADMIN</span>
+                        </div>
+
+                        <div class="card-body">
+                            <form th:action="@{/admin/import-users}" method="post" enctype="multipart/form-data">
+                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                                <input type="hidden" name="role" value="ADMIN" />
+
+                                <div class="row">
+                                    <div class="field">
+                                        <div class="label">File (txt)</div>
+                                        <input type="file" name="file" accept=".txt,text/plain" required />
+                                        <div class="help">Formato riga: <code>Nome Cognome</code> (cognome può essere
+                                            composto).</div>
+                                    </div>
+                                    <div class="field">
+                                        <div class="label">Password default (DEV)</div>
+                                        <input type="text" name="defaultPassword" value="password" required />
+                                        <div class="help">Consigliato: obbligo cambio password al primo login (backend).
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="actions">
+                                    <button class="btn btn-accent" type="submit">
+                                        <span class="icon purple"></span> Importa Admin
+                                    </button>
+                                    <a class="btn" th:href="@{/admin/users/new(role='ADMIN')}">
+                                        <span class="icon"></span> Aggiungi manualmente
+                                    </a>
+                                </div>
+                            </form>
+                        </div>
+                    </section>
+
+                    <div class="divider"></div>
+
+                    <!-- SECTION: ADD STUDENTS -->
+                    <section class="card" style="box-shadow:none; background: rgba(255,255,255,.03);">
+                        <div class="card-header">
+                            <div>
+                                <h3 class="card-title">Aggiungi Studenti</h3>
+                                <p class="card-sub">Import rapido studenti da file. Email unica generata dal backend.
+                                </p>
+                            </div>
+                            <span class="pill"><span class="icon green"></span>&nbsp;ROLE_STUDENT</span>
+                        </div>
+
+                        <div class="card-body">
+                            <form th:action="@{/admin/import-users}" method="post" enctype="multipart/form-data">
+                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                                <input type="hidden" name="role" value="STUDENT" />
+
+                                <div class="row">
+                                    <div class="field">
+                                        <div class="label">Major</div>
+                                        <select name="majorId" required>
+                                            <option value="" disabled selected>Seleziona un percorso di laurea…</option>
+                                            <option th:each="m : ${majors}" th:value="${m.id}" th:text="${m.name}">
+                                            </option>
+                                        </select>
+                                        <div class="help">Obbligatorio per import studenti.</div>
+                                    </div>
+                                    <div class="field">
+                                        <div class="label">File (txt)</div>
+                                        <input type="file" name="file" accept=".txt,text/plain" required />
+                                        <div class="help">1 riga = 1 studente. Esempio: <code>Enrico De Angelis</code>
+                                        </div>
+                                    </div>
+                                    <div class="field">
+                                        <div class="label">Password default (DEV)</div>
+                                        <input type="text" name="defaultPassword" value="password" required />
+                                        <div class="help">In produzione: password random + reset password.</div>
+                                    </div>
+                                </div>
+
+                                <div class="actions">
+                                    <button class="btn btn-accent" type="submit">
+                                        <span class="icon green"></span> Importa Studenti
+                                    </button>
+                                    <a class="btn" th:href="@{/admin/users/new(role='STUDENT')}">
+                                        <span class="icon"></span> Aggiungi manualmente
+                                    </a>
+                                </div>
+                            </form>
+                        </div>
+                    </section>
+
+                    <div class="divider"></div>
+
+                    <!-- SECTION: ADD PROFESSORS -->
+                    <section class="card" style="box-shadow:none; background: rgba(255,255,255,.03);">
+                        <div class="card-header">
+                            <div>
+                                <h3 class="card-title">Aggiungi Professori</h3>
+                                <p class="card-sub">Import professori da file. Backend: stessa logica studenti.</p>
+                            </div>
+                            <span class="pill"><span class="icon orange"></span>&nbsp;ROLE_PROFESSOR</span>
+                        </div>
+
+                        <div class="card-body">
+                            <form th:action="@{/admin/import-users}" method="post" enctype="multipart/form-data">
+                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                                <input type="hidden" name="role" value="PROFESSOR" />
+
+                                <div class="row">
+                                    <div class="field">
+                                        <div class="label">File (txt)</div>
+                                        <input type="file" name="file" accept=".txt,text/plain" required />
+                                        <div class="help">Formato: <code>Nome Cognome</code>. Il cognome può contenere
+                                            spazi.</div>
+                                    </div>
+                                    <div class="field">
+                                        <div class="label">Password default (DEV)</div>
+                                        <input type="text" name="defaultPassword" value="password" required />
+                                        <div class="help">Hash BCrypt consigliato (backend).</div>
+                                    </div>
+                                </div>
+
+                                <div class="actions">
+                                    <button class="btn btn-accent" type="submit">
+                                        <span class="icon orange"></span> Importa Professori
+                                    </button>
+                                    <a class="btn" th:href="@{/admin/users/new(role='PROFESSOR')}">
+                                        <span class="icon"></span> Aggiungi manualmente
+                                    </a>
+                                </div>
+                            </form>
+                        </div>
+                    </section>
+
+                    <div class="divider"></div>
+
+                    <!-- SECTION: ADD COURSE (front only) -->
+                    <section class="card" style="box-shadow:none; background: rgba(255,255,255,.03);">
+                        <div class="card-header">
+                            <div>
+                                <h3 class="card-title">Aggiungi Corso</h3>
+                                <p class="card-sub">
+                                    Qui basta un bottone (il backend lo fai tu). Puoi puntarlo alla route che
+                                    preferisci.
+                                </p>
+                            </div>
+                            <span class="pill">Front-only</span>
+                        </div>
+
+                        <div class="card-body">
+                            <div class="actions">
+                                <a class="btn btn-accent" th:href="@{/admin/courses/new}">
+                                    <span class="icon"></span> Crea nuovo corso
+                                </a>
+                                <a class="btn" th:href="@{/admin/courses}">
+                                    <span class="icon"></span> Vai a gestione corsi
+                                </a>
+                            </div>
+                            <div class="help">
+                                Suggerimento: aggiungi dopo “Import users” anche un report (creati/saltati/errori).
+                            </div>
+                        </div>
+                    </section>
+
+                    <div class="divider"></div>
+
+                    <!-- SECTION: ADD MAJOR -->
+                    <section class="card" style="box-shadow:none; background: rgba(255,255,255,.03);">
+                        <div class="card-header">
+                            <div>
+                                <h3 class="card-title">Crea Major (Percorso di laurea)</h3>
+                                <p class="card-sub">Esempio: Ingegneria Informatica, Ingegneria Gestionale, ...</p>
+                            </div>
+                            <span class="pill">Majors</span>
+                        </div>
+
+                        <div class="card-body">
+                            <form th:action="@{/admin/majors}" method="post">
+                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+                                <div class="row">
+                                    <div class="field">
+                                        <div class="label">Nome major</div>
+                                        <input type="text" name="majorName" placeholder="Es. Ingegneria Informatica"
+                                            required />
+                                        <div class="help">Verranno rimossi doppi spazi e controllata l’unicità.</div>
+                                    </div>
+                                </div>
+
+                                <div class="actions">
+                                    <button class="btn btn-accent" type="submit">Crea Major</button>
+                                </div>
+
+                                <p th:if="${majorMsg != null}" th:text="${majorMsg}" style="margin-top:10px;"></p>
+                                <p th:if="${majorError != null}" th:text="${majorError}"
+                                    style="margin-top:10px; color: #ff4d4d;"></p>
+                            </form>
+                        </div>
+                    </section>
+
                 </div>
-              </form>
-            </div>
-          </section>
-
-          <div class="divider"></div>
-
-          <!-- SECTION: ADD STUDENTS -->
-          <section class="card" style="box-shadow:none; background: rgba(255,255,255,.03);">
-            <div class="card-header">
-              <div>
-                <h3 class="card-title">Aggiungi Studenti</h3>
-                <p class="card-sub">Import rapido studenti da file. Email unica generata dal backend.</p>
-              </div>
-              <span class="pill"><span class="icon green"></span>&nbsp;ROLE_STUDENT</span>
             </div>
 
-            <div class="card-body">
-              <form th:action="@{/admin/import-users}" method="post" enctype="multipart/form-data">
-                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-                <input type="hidden" name="role" value="STUDENT" />
+            <!-- SIDE AREA -->
+            <div class="side">
 
-                <div class="row">
-                  <div class="field">
-                    <div class="label">File (txt)</div>
-                    <input type="file" name="file" accept=".txt,text/plain" required />
-                    <div class="help">1 riga = 1 studente. Esempio: <code>Enrico De Angelis</code></div>
-                  </div>
-                  <div class="field">
-                    <div class="label">Password default (DEV)</div>
-                    <input type="text" name="defaultPassword" value="password" required />
-                    <div class="help">In produzione: password random + reset password.</div>
-                  </div>
+                <div class="card mini">
+                    <h3>Stato</h3>
+                    <p>Azioni rapide, import da file e scorciatoie. Puoi anche mostrare KPI dal backend.</p>
+
+                    <div class="kpi">
+                        <div class="box">
+                            <div class="num" th:text="${usersCount != null ? usersCount : '—'}">—</div>
+                            <div class="txt">Utenti totali</div>
+                        </div>
+                        <div class="box">
+                            <div class="num" th:text="${coursesCount != null ? coursesCount : '—'}">—</div>
+                            <div class="txt">Corsi totali</div>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="actions">
-                  <button class="btn btn-accent" type="submit">
-                    <span class="icon green"></span> Importa Studenti
-                  </button>
-                  <a class="btn" th:href="@{/admin/users/new(role='STUDENT')}">
-                    <span class="icon"></span> Aggiungi manualmente
-                  </a>
-                </div>
-              </form>
-            </div>
-          </section>
-
-          <div class="divider"></div>
-
-          <!-- SECTION: ADD PROFESSORS -->
-          <section class="card" style="box-shadow:none; background: rgba(255,255,255,.03);">
-            <div class="card-header">
-              <div>
-                <h3 class="card-title">Aggiungi Professori</h3>
-                <p class="card-sub">Import professori da file. Backend: stessa logica studenti.</p>
-              </div>
-              <span class="pill"><span class="icon orange"></span>&nbsp;ROLE_PROFESSOR</span>
-            </div>
-
-            <div class="card-body">
-              <form th:action="@{/admin/import-users}" method="post" enctype="multipart/form-data">
-                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-                <input type="hidden" name="role" value="PROFESSOR" />
-
-                <div class="row">
-                  <div class="field">
-                    <div class="label">File (txt)</div>
-                    <input type="file" name="file" accept=".txt,text/plain" required />
-                    <div class="help">Formato: <code>Nome Cognome</code>. Il cognome può contenere spazi.</div>
-                  </div>
-                  <div class="field">
-                    <div class="label">Password default (DEV)</div>
-                    <input type="text" name="defaultPassword" value="password" required />
-                    <div class="help">Hash BCrypt consigliato (backend).</div>
-                  </div>
+                <div class="card mini">
+                    <h3>Formato file consigliato</h3>
+                    <p>Una riga per utente:</p>
+                    <div class="note">
+                        <strong>Esempio</strong><br />
+                        Marco Rossi<br />
+                        Enrico De Angelis<br />
+                        Giulia D’Angelo
+                    </div>
+                    <p>Il backend può: normalizzare spazi, capitalizzare e generare email unica.</p>
                 </div>
 
-                <div class="actions">
-                  <button class="btn btn-accent" type="submit">
-                    <span class="icon orange"></span> Importa Professori
-                  </button>
-                  <a class="btn" th:href="@{/admin/users/new(role='PROFESSOR')}">
-                    <span class="icon"></span> Aggiungi manualmente
-                  </a>
+                <div class="card mini">
+                    <h3>Sicurezza</h3>
+                    <p class="note">
+                        <strong>Consigliato:</strong> pagina accessibile solo a <strong>ROLE_ADMIN</strong>.
+                        Per password, usa BCrypt e considera “must change password” al primo login.
+                    </p>
                 </div>
-              </form>
-            </div>
-          </section>
 
-          <div class="divider"></div>
-
-          <!-- SECTION: ADD COURSE (front only) -->
-          <section class="card" style="box-shadow:none; background: rgba(255,255,255,.03);">
-            <div class="card-header">
-              <div>
-                <h3 class="card-title">Aggiungi Corso</h3>
-                <p class="card-sub">
-                  Qui basta un bottone (il backend lo fai tu). Puoi puntarlo alla route che preferisci.
-                </p>
-              </div>
-              <span class="pill">Front-only</span>
             </div>
-
-            <div class="card-body">
-              <div class="actions">
-                <a class="btn btn-accent" th:href="@{/admin/courses/new}">
-                  <span class="icon"></span> Crea nuovo corso
-                </a>
-                <a class="btn" th:href="@{/admin/courses}">
-                  <span class="icon"></span> Vai a gestione corsi
-                </a>
-              </div>
-              <div class="help">
-                Suggerimento: aggiungi dopo “Import users” anche un report (creati/saltati/errori).
-              </div>
-            </div>
-          </section>
 
         </div>
-      </div>
-
-      <!-- SIDE AREA -->
-      <div class="side">
-
-        <div class="card mini">
-          <h3>Stato</h3>
-          <p>Azioni rapide, import da file e scorciatoie. Puoi anche mostrare KPI dal backend.</p>
-
-          <div class="kpi">
-            <div class="box">
-              <div class="num" th:text="${usersCount != null ? usersCount : '—'}">—</div>
-              <div class="txt">Utenti totali</div>
-            </div>
-            <div class="box">
-              <div class="num" th:text="${coursesCount != null ? coursesCount : '—'}">—</div>
-              <div class="txt">Corsi totali</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="card mini">
-          <h3>Formato file consigliato</h3>
-          <p>Una riga per utente:</p>
-          <div class="note">
-            <strong>Esempio</strong><br/>
-            Marco Rossi<br/>
-            Enrico De Angelis<br/>
-            Giulia D’Angelo
-          </div>
-          <p>Il backend può: normalizzare spazi, capitalizzare e generare email unica.</p>
-        </div>
-
-        <div class="card mini">
-          <h3>Sicurezza</h3>
-          <p class="note">
-            <strong>Consigliato:</strong> pagina accessibile solo a <strong>ROLE_ADMIN</strong>.
-            Per password, usa BCrypt e considera “must change password” al primo login.
-          </p>
-        </div>
-
-      </div>
-
     </div>
-  </div>
 </body>
+
 </html>

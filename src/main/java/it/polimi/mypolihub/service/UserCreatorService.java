@@ -8,14 +8,21 @@ import java.util.List;
 import java.util.Locale;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ClassPathResource;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import it.polimi.mypolihub.DTO.UserImportReportDTO;
+import it.polimi.mypolihub.entity.Major;
+import it.polimi.mypolihub.entity.Professor;
 import it.polimi.mypolihub.entity.Role;
+import it.polimi.mypolihub.entity.Student;
 import it.polimi.mypolihub.entity.User;
+import it.polimi.mypolihub.repository.MajorRepository;
+import it.polimi.mypolihub.repository.ProfessorRepository;
+import it.polimi.mypolihub.repository.StudentRepository;
 import it.polimi.mypolihub.repository.UserRepository;
 
 @Service
@@ -25,42 +32,47 @@ public class UserCreatorService {
     private UserRepository userRepository;
 
     @Autowired
+    private StudentRepository studentRepository;
+
+    @Autowired
+    private MajorRepository majorRepository;
+
+    @Autowired
+    private ProfessorRepository professorRepository;
+
+    @Autowired
     PasswordEncoder passwordEncoder;
 
     private record Name(String name, String surname) { }
 
-    public UserImportReportDTO importUsersFromUpload(MultipartFile file, Role role, String defaultPassword) {
+    @PreAuthorize("hasRole('ADMIN')")
+    @Transactional
+    public UserImportReportDTO importUsersFromUpload(MultipartFile file, Role role, String defaultPassword, Integer majorId) {
         try (BufferedReader br = bufferedReaderOfFile(file)) {
 
-            return insertUsersWithSameRoleAndDefaultPassword(br, role, defaultPassword);
+            return insertUsersWithSameRoleAndDefaultPassword(br, role, defaultPassword, majorId);
 
         } catch (IOException e) {
             throw new RuntimeException("Upload file error", e);
         }
     }
 
-    public UserImportReportDTO importUsersFromFile(String fileName, Role role, String defaultPassword) {
-        var file = new ClassPathResource(fileName);
-
-        try (BufferedReader br = bufferedReaderOfFile(file)) {
-
-            return insertUsersWithSameRoleAndDefaultPassword(br, role, defaultPassword);
-
-        } catch (IOException e) {
-            throw new RuntimeException("File error " + file.getPath(), e);
-        }
-    }
-
-    private BufferedReader bufferedReaderOfFile(ClassPathResource file) throws IOException {
-        return new BufferedReader(new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8));
-    }
-
     private BufferedReader bufferedReaderOfFile(MultipartFile file) throws IOException {
         return new BufferedReader(new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8));
     }
 
-    private UserImportReportDTO insertUsersWithSameRoleAndDefaultPassword(BufferedReader br, Role role, String defaultPassword) throws IOException {
+    private UserImportReportDTO insertUsersWithSameRoleAndDefaultPassword(BufferedReader br, Role role, String defaultPassword, Integer majorId) throws IOException {
         UserImportReportDTO report = new UserImportReportDTO();
+
+        Major major = null;
+        try {
+            major = getMajorIfStudent(role, majorId);
+        } catch (IllegalArgumentException e) {
+            report.incSkipped();
+            report.addError(e.getMessage());
+
+            return report;
+        }
 
         String readName;
         while ((readName = br.readLine()) != null) {
@@ -77,12 +89,33 @@ public class UserCreatorService {
                 continue;
             }
 
-            User user = buildUser(fullName.name, fullName.surname, role);
-            userRepository.save(user);
-            report.incCreated();
+            User user = buildUser(fullName.name, fullName.surname, role, defaultPassword);
+
+            try {
+                insertUserIntoDB(user, role, major);
+                report.incCreated();
+
+            } catch (IllegalArgumentException e) {
+                report.incSkipped();
+                report.addError("Error on '" + readName + "': " + e.getMessage());
+            }
         }
 
         return report;
+    }
+
+    private Major getMajorIfStudent(Role role, Integer majorId) {
+        Major major = null;
+
+        if (role == Role.STUDENT) {
+            if (majorId == null) {
+                throw new IllegalArgumentException("Major not valid (cannot be null)");
+            }
+            major = majorRepository.findById(majorId)
+                .orElseThrow(() -> new IllegalArgumentException("Major not found: " + majorId));
+        }
+
+        return major;
     }
 
     private Name getNameFromRawName(String rawName) {
@@ -140,9 +173,8 @@ public class UserCreatorService {
         return word;
     }
 
-    private User buildUser(String name, String surname, Role role) {
+    private User buildUser(String name, String surname, Role role, String password) {
         User u = new User();
-        String password = "password";
 
         u.setName(name);
         u.setSurname(surname);
@@ -166,5 +198,34 @@ public class UserCreatorService {
             i++;
         }
         return email;
+    }
+
+    private void insertUserIntoDB(User user, Role role, Major major) {
+        switch (role) {
+            case STUDENT -> saveStudent(user, major);
+            case PROFESSOR -> saveProfessor(user);
+            case ADMIN -> saveAdmin(user);
+        }
+    }
+
+    private void saveStudent(User user, Major major) {
+        userRepository.save(user);
+
+        Student student = new Student();
+        student.setUser(user);
+        student.setMajor(major);
+        studentRepository.save(student);
+    }
+
+    private void saveProfessor(User user) {
+        userRepository.save(user);
+
+        Professor professor = new Professor();
+        professor.setUser(user);
+        professorRepository.save(professor);
+    }
+
+    private void saveAdmin(User user) {
+        userRepository.save(user);
     }
 }
