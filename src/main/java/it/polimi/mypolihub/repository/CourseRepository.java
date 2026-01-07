@@ -1,8 +1,9 @@
 package it.polimi.mypolihub.repository;
 
-import org.springframework.stereotype.Repository;
+import org.springframework.data.jpa.repository.JpaRepository;
 
-@Repository
-public class CourseRepository {
+import it.polimi.mypolihub.entity.Course;
+
+public interface CourseRepository extends JpaRepository<Course, Integer> {
     
 }

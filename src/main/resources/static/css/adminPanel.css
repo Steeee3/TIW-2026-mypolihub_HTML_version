@@ -439,6 +439,79 @@ select:focus {
   box-shadow: 0 0 0 4px rgba(0, 90, 165, 0.16);
 }
 
+.field input[type="number"] {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid var(--input-border);
+  background: var(--input-bg);
+  color: var(--text);
+  outline: none;
+  font: inherit;
+}
+
+.field input[type="number"]:focus {
+  background: var(--input-bg);
+  color: var(--text);
+  border-color: rgba(0, 90, 165, 0.55);
+  box-shadow: 0 0 0 4px rgba(0, 90, 165, 0.16);
+}
+
+.field input[type="number"]:-webkit-autofill,
+.field input[type="number"]:-webkit-autofill:hover,
+.field input[type="number"]:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--text);
+  box-shadow: 0 0 0px 1000px var(--input-bg) inset;
+  transition: background-color 999999s ease-in-out 0s;
+}
+
+.field input[type="number"]::placeholder {
+  color: color-mix(in srgb, var(--text) 55%, transparent);
+}
+
+.field input[type="datetime-local"] {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid var(--input-border);
+  background: var(--input-bg);
+  color: var(--text);
+  outline: none;
+  font: inherit;
+  box-sizing: border-box;
+
+  /* fondamentale: fa rispettare il tema scuro su controlli nativi */
+  color-scheme: dark;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.field input[type="datetime-local"]:focus {
+  border-color: rgba(0, 90, 165, 0.55);
+  box-shadow: 0 0 0 4px rgba(0, 90, 165, 0.16);
+}
+
+/* WebKit: evita parti interne chiare */
+.field input[type="datetime-local"]::-webkit-datetime-edit,
+.field input[type="datetime-local"]::-webkit-datetime-edit-fields-wrapper {
+  color: var(--text);
+}
+
+.field input[type="datetime-local"]::-webkit-datetime-edit-text {
+  opacity: .85;
+}
+
+/* icona calendario coerente */
+.field input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  opacity: .8;
+  cursor: pointer;
+  filter: invert(1);
+}
+
+.field input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}
+
 @media (prefers-color-scheme: dark) {
   .icon {
     background: rgba(255, 255, 255, 0.22);

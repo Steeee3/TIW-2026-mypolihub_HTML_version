@@ -211,31 +211,117 @@
 
                     <div class="divider"></div>
 
-                    <!-- SECTION: ADD COURSE (front only) -->
+                    <!-- SECTION: ADD COURSE -->
                     <section class="card" style="box-shadow:none; background: rgba(255,255,255,.03);">
                         <div class="card-header">
                             <div>
                                 <h3 class="card-title">Aggiungi Corso</h3>
                                 <p class="card-sub">
-                                    Qui basta un bottone (il backend lo fai tu). Puoi puntarlo alla route che
-                                    preferisci.
+                                    Crea un corso scegliendo la major e il professore esistente.
                                 </p>
                             </div>
-                            <span class="pill">Front-only</span>
+                            <span class="pill">Corsi</span>
                         </div>
 
                         <div class="card-body">
-                            <div class="actions">
-                                <a class="btn btn-accent" th:href="@{/admin/courses/new}">
-                                    <span class="icon"></span> Crea nuovo corso
-                                </a>
-                                <a class="btn" th:href="@{/admin/courses}">
-                                    <span class="icon"></span> Vai a gestione corsi
-                                </a>
+                            <form th:action="@{/admin/courses}" method="post">
+                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+                                <div class="row">
+                                    <div class="field">
+                                        <div class="label">Nome corso</div>
+                                        <input type="text" name="courseName" maxlength="50"
+                                            placeholder="es. Ingegneria del Software" required />
+                                    </div>
+
+                                    <div class="field">
+                                        <div class="label">CFU</div>
+                                        <input type="number" name="cfu" min="1" max="30" placeholder="es. 10"
+                                            required />
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="field">
+                                        <div class="label">Major</div>
+                                        <select name="majorId" required>
+                                            <option value="" disabled selected>Seleziona una major…</option>
+                                            <option th:each="m : ${majors}" th:value="${m.id}" th:text="${m.name}">
+                                            </option>
+                                        </select>
+                                        <div class="help">Obbligatoria: determina il percorso di laurea.</div>
+                                    </div>
+
+                                    <div class="field">
+                                        <div class="label">Professore</div>
+
+                                        <input type="text" name="professorId" list="professorsList"
+                                            placeholder="Cerca e seleziona (scrivi il nome)…" required />
+
+                                        <datalist id="professorsList">
+                                            <option th:each="p : ${professors}" th:value="${p.id}"
+                                                th:text="|${p.user.name} ${p.user.surname}|">
+                                            </option>
+                                        </datalist>
+
+                                        <div class="help">
+                                            Inizia a digitare: ti verranno suggeriti i professori esistenti.
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="actions">
+                                    <button class="btn btn-accent" type="submit">
+                                        <span class="icon"></span> Crea corso
+                                    </button>
+                                    <a class="btn" th:href="@{/admin/courses}">
+                                        <span class="icon"></span> Vai a gestione corsi
+                                    </a>
+                                </div>
+                            </form>
+                        </div>
+                    </section>
+
+                    <div class="divider"></div>
+
+                    <!-- SECTION: ADD EXAM -->
+                    <section class="card" style="box-shadow:none; background: rgba(255,255,255,.03);">
+                        <div class="card-header">
+                            <div>
+                                <h3 class="card-title">Crea esame</h3>
+                                <p class="card-sub">Crea un appello scegliendo un corso esistente e la data/ora.</p>
                             </div>
-                            <div class="help">
-                                Suggerimento: aggiungi dopo “Import users” anche un report (creati/saltati/errori).
-                            </div>
+                            <span class="pill">Esami</span>
+                        </div>
+
+                        <div class="card-body">
+                            <form th:action="@{/admin/exams}" method="post">
+                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+                                <div class="row">
+                                    <div class="field">
+                                        <div class="label">Corso</div>
+                                        <select name="courseId" required>
+                                            <option value="" disabled selected>Scegli un corso…</option>
+                                            <option th:each="c : ${courses}" th:value="${c.id}" th:text="${c.name}">
+                                            </option>
+                                        </select>
+                                        <div class="help">Seleziona il corso a cui associare l’appello.</div>
+                                    </div>
+
+                                    <div class="field">
+                                        <div class="label">Data esame</div>
+                                        <input type="datetime-local" name="examDateTime" required />
+                                        <div class="help">Seleziona data e ora dell’appello.</div>
+                                    </div>
+                                </div>
+
+                                <div class="actions">
+                                    <button class="btn btn-accent" type="submit">
+                                        <span class="icon"></span> Crea esame
+                                    </button>
+                                </div>
+                            </form>
                         </div>
                     </section>
 

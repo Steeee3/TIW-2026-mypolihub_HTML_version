@@ -11,8 +11,11 @@ import org.springframework.web.multipart.MultipartFile;
 
 import it.polimi.mypolihub.DTO.UserImportReportDTO;
 import it.polimi.mypolihub.entity.Role;
+import it.polimi.mypolihub.repository.CourseRepository;
 import it.polimi.mypolihub.repository.MajorRepository;
+import it.polimi.mypolihub.repository.ProfessorRepository;
 import it.polimi.mypolihub.repository.UserRepository;
+import it.polimi.mypolihub.service.CourseService;
 import it.polimi.mypolihub.service.MajorService;
 import it.polimi.mypolihub.service.UserCreatorService;
 
@@ -27,15 +30,26 @@ public class AdminPanelController {
     private MajorService majorService;
 
     @Autowired
+    private CourseService courseService;
+
+    @Autowired
     private UserRepository userRepository;
 
     @Autowired
+    private ProfessorRepository professorRepository;
+
+    @Autowired
     private MajorRepository majorRepository;
+
+    @Autowired
+    private CourseRepository courseRepository;
 
     @GetMapping("/panel")
     public String panel(Model model) {
         model.addAttribute("majors", majorRepository.findAll());
         model.addAttribute("usersCount", userRepository.count());
+        model.addAttribute("coursesCount", courseRepository.count());
+        model.addAttribute("professors", professorRepository.findAllWithUser());
         model.addAttribute("report", null);
 
         return "admin/panel";
@@ -51,6 +65,8 @@ public class AdminPanelController {
 
         model.addAttribute("majors", majorRepository.findAll());
         model.addAttribute("usersCount", userRepository.count());
+        model.addAttribute("professors", professorRepository.findAllWithUser());
+        model.addAttribute("coursesCount", courseRepository.count());
         model.addAttribute("report", report);
 
         return "admin/panel";
@@ -68,8 +84,34 @@ public class AdminPanelController {
         }
 
         model.addAttribute("report", null);
+        model.addAttribute("majors", majorRepository.findAll());
         model.addAttribute("usersCount", userRepository.count());
-        model.addAttribute("coursesCount", null);
+        model.addAttribute("professors", professorRepository.findAllWithUser());
+        model.addAttribute("coursesCount", courseRepository.count());
+
+        return "admin/panel";
+    }
+
+    @PostMapping("/courses")
+    public String createCourse(
+        @RequestParam("courseName") String courseName,
+        @RequestParam("cfu") Integer cfu,
+        @RequestParam("majorId") Integer majorId,
+        @RequestParam("professorId") Integer professorId,
+        Model model
+    ) {
+        try {
+            courseService.createCourse(courseName, cfu, majorId, professorId);
+            model.addAttribute("majorMsg", "Corso creato: " + courseName);
+        } catch (IllegalArgumentException e) {
+            model.addAttribute("majorError", e.getMessage());
+        }
+
+        model.addAttribute("report", null);
+        model.addAttribute("majors", majorRepository.findAll());
+        model.addAttribute("usersCount", userRepository.count());
+        model.addAttribute("professors", professorRepository.findAllWithUser());
+        model.addAttribute("coursesCount", courseRepository.count());
 
         return "admin/panel";
     }

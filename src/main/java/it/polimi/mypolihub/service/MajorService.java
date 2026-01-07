@@ -16,10 +16,11 @@ public class MajorService {
     @Transactional
     public void createMajor(String rawName) {
         String name = rawName == null ? "" : rawName.trim().replaceAll("\\s+", " ");
-        if (name.isBlank()) throw new IllegalArgumentException("Nome major vuoto.");
+        
+        if (name.isBlank()) throw new IllegalArgumentException("Major name is blank");
 
         if (majorRepository.existsByNameIgnoreCase(name)) {
-            throw new IllegalArgumentException("Major già esistente: " + name);
+            throw new IllegalArgumentException("Major already exists: " + name);
         }
 
         Major m = new Major();

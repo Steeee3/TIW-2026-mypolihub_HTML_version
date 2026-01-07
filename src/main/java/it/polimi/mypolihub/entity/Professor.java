@@ -11,6 +11,7 @@ import jakarta.persistence.Table;
 @Entity
 @Table(name = "professors")
 public class Professor {
+
     @Id
     private Integer id;
 
@@ -20,5 +21,7 @@ public class Professor {
     private User user;
 
     public Integer getId() { return id; }
+
+    public User getUser() { return user; }
     public void setUser(User user) { this.user = user; }
 }
