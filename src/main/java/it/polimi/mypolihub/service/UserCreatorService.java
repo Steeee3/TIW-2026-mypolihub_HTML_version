@@ -43,11 +43,13 @@ public class UserCreatorService {
     @Autowired
     PasswordEncoder passwordEncoder;
 
-    private record Name(String name, String surname) { }
+    private record Name(String name, String surname) {
+    }
 
     @PreAuthorize("hasRole('ADMIN')")
     @Transactional
-    public UserImportReportDTO importUsersFromUpload(MultipartFile file, Role role, String defaultPassword, Integer majorId) {
+    public UserImportReportDTO importUsersFromUpload(MultipartFile file, Role role, String defaultPassword,
+            Integer majorId) {
         try (BufferedReader br = bufferedReaderOfFile(file)) {
 
             return insertUsersWithSameRoleAndDefaultPassword(br, role, defaultPassword, majorId);
@@ -61,7 +63,8 @@ public class UserCreatorService {
         return new BufferedReader(new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8));
     }
 
-    private UserImportReportDTO insertUsersWithSameRoleAndDefaultPassword(BufferedReader br, Role role, String defaultPassword, Integer majorId) throws IOException {
+    private UserImportReportDTO insertUsersWithSameRoleAndDefaultPassword(BufferedReader br, Role role,
+            String defaultPassword, Integer majorId) throws IOException {
         UserImportReportDTO report = new UserImportReportDTO();
 
         Major major = null;
@@ -82,7 +85,7 @@ public class UserCreatorService {
                 report.incSkipped();
                 continue;
             }
-                
+
             Name fullName = getNameFromRawName(readName);
             if (fullName == null) {
                 report.incSkipped();
@@ -112,7 +115,7 @@ public class UserCreatorService {
                 throw new IllegalArgumentException("Major not valid (cannot be null)");
             }
             major = majorRepository.findById(majorId)
-                .orElseThrow(() -> new IllegalArgumentException("Major not found: " + majorId));
+                    .orElseThrow(() -> new IllegalArgumentException("Major not found: " + majorId));
         }
 
         return major;
@@ -148,9 +151,8 @@ public class UserCreatorService {
     }
 
     private String capitalizeAndSanify(String word) {
-        word = word.trim().
-            replaceAll("\\s+", " ")
-            .toLowerCase(Locale.ROOT);
+        word = word.trim().replaceAll("\\s+", " ")
+                .toLowerCase(Locale.ROOT);
 
         if (word.isEmpty()) {
             return word;
@@ -187,8 +189,8 @@ public class UserCreatorService {
 
     private String createUniqueEmail(String fullName) {
         String base = fullName
-            .toLowerCase()
-            .replace(" ", ".");
+                .toLowerCase()
+                .replace(" ", ".");
         String domain = "@mail.polimi.it";
         String email = base + domain;
 
@@ -227,5 +229,49 @@ public class UserCreatorService {
 
     private void saveAdmin(User user) {
         userRepository.save(user);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @Transactional
+    public UserImportReportDTO createSingleUser(Role role, String name, String surname, String defaultPassword,
+            Integer majorId) {
+        UserImportReportDTO report = new UserImportReportDTO();
+
+        Major major = null;
+        try {
+            major = getMajorIfStudent(role, majorId);
+        } catch (IllegalArgumentException e) {
+            report.incSkipped();
+            report.addError(e.getMessage());
+
+            return report;
+        }
+
+        String insertedName = name + " " + surname;
+        insertedName = insertedName.trim();
+
+        if (insertedName.isBlank()) {
+            report.incSkipped();
+            return report;
+        }
+
+        Name fullName = getNameFromRawName(insertedName);
+        if (fullName == null) {
+            report.incSkipped();
+            return report;
+        }
+
+        User user = buildUser(fullName.name, fullName.surname, role, defaultPassword);
+
+        try {
+            insertUserIntoDB(user, role, major);
+            report.incCreated();
+
+        } catch (IllegalArgumentException e) {
+            report.incSkipped();
+            report.addError("Error on '" + insertedName + "': " + e.getMessage());
+        }
+
+        return report;
     }
 }

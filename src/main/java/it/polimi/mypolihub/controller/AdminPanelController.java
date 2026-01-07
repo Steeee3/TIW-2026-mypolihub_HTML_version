@@ -80,6 +80,26 @@ public class AdminPanelController {
         return "admin/panel";
     }
 
+    @PostMapping("/users")
+    public String importSingleUser(
+            @RequestParam("role") Role role,
+            @RequestParam("name") String name,
+            @RequestParam("surname") String surname,
+            @RequestParam("password") String password,
+            @RequestParam(value = "majorId", required = false) Integer majorId,
+            Model model) {
+        UserImportReportDTO report = userCreatorService.createSingleUser(role, name, surname, password, majorId);
+
+        model.addAttribute("majors", majorRepository.findAll());
+        model.addAttribute("usersCount", userRepository.count());
+        model.addAttribute("professors", professorRepository.findAllWithUser());
+        model.addAttribute("coursesCount", courseRepository.count());
+        model.addAttribute("courses", courseRepository.findAll());
+        model.addAttribute("report", report);
+
+        return "admin/panel";
+    }
+
     @PostMapping("/majors")
     public String createMajor(@RequestParam("majorName") String majorName,
             Model model) {
@@ -103,12 +123,11 @@ public class AdminPanelController {
 
     @PostMapping("/courses")
     public String createCourse(
-        @RequestParam("courseName") String courseName,
-        @RequestParam("cfu") Integer cfu,
-        @RequestParam("majorId") Integer majorId,
-        @RequestParam("professorId") Integer professorId,
-        Model model
-    ) {
+            @RequestParam("courseName") String courseName,
+            @RequestParam("cfu") Integer cfu,
+            @RequestParam("majorId") Integer majorId,
+            @RequestParam("professorId") Integer professorId,
+            Model model) {
         try {
             courseService.createCourse(courseName, cfu, majorId, professorId);
             model.addAttribute("majorMsg", "Corso creato: " + courseName);
@@ -127,7 +146,8 @@ public class AdminPanelController {
     }
 
     @PostMapping("/exams")
-    public String createExamCall(@RequestParam("courseId") Integer courseId, @RequestParam("date") LocalDateTime date, Model model) {
+    public String createExamCall(@RequestParam("courseId") Integer courseId, @RequestParam("date") LocalDateTime date,
+            Model model) {
         try {
             examService.addExamCall(courseId, date);
             model.addAttribute("examMsg", "Esame aggiunto");

@@ -512,6 +512,34 @@ select:focus {
   opacity: 1;
 }
 
+details.reveal {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface-2);
+  padding: 10px;
+}
+
+details.reveal summary {
+  list-style: none;
+}
+
+details.reveal summary::-webkit-details-marker {
+  display: none;
+}
+
+details.reveal .reveal-body {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(0, 40, 90, 0.10);
+}
+
+@media (prefers-color-scheme: dark) {
+  details.reveal .reveal-body {
+    border-top: 1px solid rgba(255, 255, 255, 0.10);
+  }
+}
+
+
 @media (prefers-color-scheme: dark) {
   .icon {
     background: rgba(255, 255, 255, 0.22);
