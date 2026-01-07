@@ -1,5 +1,7 @@
 package it.polimi.mypolihub.controller;
 
+import java.time.LocalDateTime;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -16,6 +18,7 @@ import it.polimi.mypolihub.repository.MajorRepository;
 import it.polimi.mypolihub.repository.ProfessorRepository;
 import it.polimi.mypolihub.repository.UserRepository;
 import it.polimi.mypolihub.service.CourseService;
+import it.polimi.mypolihub.service.ExamService;
 import it.polimi.mypolihub.service.MajorService;
 import it.polimi.mypolihub.service.UserCreatorService;
 
@@ -31,6 +34,9 @@ public class AdminPanelController {
 
     @Autowired
     private CourseService courseService;
+
+    @Autowired
+    private ExamService examService;
 
     @Autowired
     private UserRepository userRepository;
@@ -50,6 +56,7 @@ public class AdminPanelController {
         model.addAttribute("usersCount", userRepository.count());
         model.addAttribute("coursesCount", courseRepository.count());
         model.addAttribute("professors", professorRepository.findAllWithUser());
+        model.addAttribute("courses", courseRepository.findAll());
         model.addAttribute("report", null);
 
         return "admin/panel";
@@ -67,6 +74,7 @@ public class AdminPanelController {
         model.addAttribute("usersCount", userRepository.count());
         model.addAttribute("professors", professorRepository.findAllWithUser());
         model.addAttribute("coursesCount", courseRepository.count());
+        model.addAttribute("courses", courseRepository.findAll());
         model.addAttribute("report", report);
 
         return "admin/panel";
@@ -88,6 +96,7 @@ public class AdminPanelController {
         model.addAttribute("usersCount", userRepository.count());
         model.addAttribute("professors", professorRepository.findAllWithUser());
         model.addAttribute("coursesCount", courseRepository.count());
+        model.addAttribute("courses", courseRepository.findAll());
 
         return "admin/panel";
     }
@@ -112,6 +121,26 @@ public class AdminPanelController {
         model.addAttribute("usersCount", userRepository.count());
         model.addAttribute("professors", professorRepository.findAllWithUser());
         model.addAttribute("coursesCount", courseRepository.count());
+        model.addAttribute("courses", courseRepository.findAll());
+
+        return "admin/panel";
+    }
+
+    @PostMapping("/exams")
+    public String createExamCall(@RequestParam("courseId") Integer courseId, @RequestParam("date") LocalDateTime date, Model model) {
+        try {
+            examService.addExamCall(courseId, date);
+            model.addAttribute("examMsg", "Esame aggiunto");
+        } catch (IllegalArgumentException e) {
+            model.addAttribute("examError", e.getMessage());
+        }
+
+        model.addAttribute("report", null);
+        model.addAttribute("majors", majorRepository.findAll());
+        model.addAttribute("usersCount", userRepository.count());
+        model.addAttribute("professors", professorRepository.findAllWithUser());
+        model.addAttribute("coursesCount", courseRepository.count());
+        model.addAttribute("courses", courseRepository.findAll());
 
         return "admin/panel";
     }

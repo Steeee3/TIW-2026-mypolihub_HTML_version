@@ -311,7 +311,7 @@
 
                                     <div class="field">
                                         <div class="label">Data esame</div>
-                                        <input type="datetime-local" name="examDateTime" required />
+                                        <input type="datetime-local" name="date" step="60" required />
                                         <div class="help">Seleziona data e ora dell’appello.</div>
                                     </div>
                                 </div>
@@ -321,6 +321,10 @@
                                         <span class="icon"></span> Crea esame
                                     </button>
                                 </div>
+
+                                <p th:if="${examMsg != null}" th:text="${majorMsg}" style="margin-top:10px;"></p>
+                                <p th:if="${examError != null}" th:text="${majorError}"
+                                    style="margin-top:10px; color: #ff4d4d;"></p>
                             </form>
                         </div>
                     </section>
