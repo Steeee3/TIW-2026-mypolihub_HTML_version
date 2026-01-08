@@ -36,7 +36,7 @@ public class ExamService {
 
     @Transactional
     public List<ExamDTO> getExamsForCourse(Integer courseId) {
-        List<Exam> exams = examRepository.findAllByCourse_IdOrderByDateAsc(courseId);
+        List<Exam> exams = examRepository.findAllByCourse_IdOrderByDateDesc(courseId);
 
         return exams.stream()
             .map(exam -> new ExamDTO(exam))
