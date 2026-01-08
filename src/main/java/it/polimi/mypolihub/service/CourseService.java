@@ -1,9 +1,13 @@
 package it.polimi.mypolihub.service;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import it.polimi.mypolihub.DTO.CourseDTO;
 import it.polimi.mypolihub.entity.Course;
 import it.polimi.mypolihub.entity.Major;
 import it.polimi.mypolihub.entity.Professor;
@@ -39,5 +43,29 @@ public class CourseService {
         course.setProfessor(professor);
 
         courseRepository.save(course);
+    }
+
+    @Transactional
+    public List<CourseDTO> findCoursesByStudentId(Integer studentId) {
+        List<CourseDTO> coursesDTO = new ArrayList<>();
+
+        List<Course> courses = courseRepository.findByStudents_IdOrderByNameDesc(studentId);
+        for (Course course : courses) {
+            coursesDTO.add(new CourseDTO(course));
+        }
+
+        return coursesDTO;
+    }
+
+    @Transactional
+    public List<CourseDTO> findCoursesByProfessorId(Integer professorId) {
+        List<CourseDTO> coursesDTO = new ArrayList<>();
+
+        List<Course> courses = courseRepository.findByProfessor_IdOrderByNameDesc(professorId);
+        for (Course course : courses) {
+            coursesDTO.add(new CourseDTO(course));
+        }
+
+        return coursesDTO;
     }
 }

@@ -2,8 +2,12 @@ package it.polimi.mypolihub.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 import it.polimi.mypolihub.entity.Major;
+import it.polimi.mypolihub.entity.Professor;
 import it.polimi.mypolihub.entity.Student;
 import it.polimi.mypolihub.entity.User;
 import it.polimi.mypolihub.repository.StudentRepository;
@@ -18,6 +22,7 @@ public class UserService {
     @Autowired
     private StudentRepository studentRepository;
 
+    @Transactional
     public void createStudent(User user, Major major) {
         userRepository.save(user);
 
