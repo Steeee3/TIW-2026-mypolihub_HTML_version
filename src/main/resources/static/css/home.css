@@ -189,7 +189,7 @@
   grid-auto-rows: max-content;
 }
 
-.side-col > .card {
+.side-col>.card {
   height: fit-content;
 }
 
@@ -446,4 +446,113 @@
   background: var(--chip-bg);
   font-size: 12px;
   font-weight: 800;
+}
+
+.course-card.is-selected {
+  border-color: rgba(0, 90, 165, 0.55);
+  box-shadow: 0 18px 55px rgba(0, 90, 165, 0.18);
+}
+
+.exam-block {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed color-mix(in srgb, var(--border) 80%, transparent);
+}
+
+.exam-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.exam-list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+.exam-item {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 12px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  text-decoration: none;
+  color: var(--text);
+  transition: transform .12s ease, filter .12s ease, border-color .12s ease;
+}
+
+.exam-item:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.03);
+  border-color: rgba(0, 90, 165, 0.35);
+}
+
+.exam-date {
+  font-weight: 820;
+  letter-spacing: .2px;
+}
+
+.exam-time {
+  font-weight: 750;
+  color: var(--muted);
+}
+
+.exam-cta {
+  padding: 7px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 90, 165, 0.25);
+  background: rgba(0, 90, 165, 0.10);
+  font-size: 12px;
+  font-weight: 850;
+}
+
+@media (max-width: 560px) {
+  .exam-item {
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      "date cta"
+      "time cta";
+  }
+
+  .exam-date {
+    grid-area: date;
+  }
+
+  .exam-time {
+    grid-area: time;
+  }
+
+  .exam-cta {
+    grid-area: cta;
+  }
+}
+
+.btn-accent .icon {
+  width: 16px;
+  height: 16px;
+  border-radius: 6px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 16px;
+
+  background: rgba(255, 255, 255, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+}
+
+.btn-accent:hover .icon {
+  background: rgba(255, 255, 255, 0.34);
+  border-color: rgba(255, 255, 255, 0.26);
+}
+
+@media (prefers-color-scheme: dark) {
+  .btn-accent .icon {
+    background: rgba(255, 255, 255, 0.22);
+    border-color: rgba(255, 255, 255, 0.18);
+  }
 }

@@ -102,11 +102,12 @@
 
                     <div id="coursesGrid" class="courses-grid" th:if="${courses != null and !courses.isEmpty()}">
 
-                        <article class="course-card" th:each="c : ${courses}"
+                        <article class="course-card" th:each="c : ${courses}" th:id="|course-${c.id}|"
+                            th:classappend="${selectedCourseId != null and selectedCourseId == c.id} ? ' is-selected' : ''"
                             th:attr="data-name=${#strings.toLowerCase(c.name)},
-                       data-cfu=${c.cfu},
-                       data-major=${#strings.toLowerCase(c.major != null ? c.major.name : '')},
-                       data-prof=${#strings.toLowerCase(c.professor != null ? (c.professor.name + ' ' + c.professor.surname) : '')}">
+                                     data-cfu=${c.cfu},
+                                     data-major=${#strings.toLowerCase(c.major != null ? c.major.name : '')},
+                                     data-prof=${#strings.toLowerCase(c.professor != null ? (c.professor.name + ' ' + c.professor.surname) : '')}">
                             <div class="course-accent"></div>
 
                             <div class="course-head">
@@ -131,6 +132,12 @@
                                                 Docente
                                             </span>
                                         </span>
+
+                                        <!-- Bottone: carica SOLO gli appelli di questo corso -->
+                                        <a class="btn btn-accent" style="padding: 9px 12px;"
+                                            th:href="|/home?courseId=${c.id}#course-${c.id}|">
+                                            <span class="icon"></span> Appelli
+                                        </a>
                                     </div>
                                 </div>
 
@@ -142,11 +149,12 @@
                                 </div>
                             </div>
 
-                            <details class="course-details">
+                            <details class="course-details"
+                                th:attr="open=${selectedCourseId != null and selectedCourseId == c.id}">
                                 <summary>
                                     <span class="summary-left">
                                         <span class="chev"></span>
-                                        Dettagli corso
+                                        Dettagli e appelli
                                     </span>
                                     <span class="summary-right">
                                         <span class="mini-pill"
@@ -189,6 +197,38 @@
                                                 th:text="|+${c.students.size() - 6}|">+0</span>
                                         </div>
                                     </div>
+
+                                    <!-- APPELLI: mostrali SOLO se questo è il corso selezionato -->
+                                    <div class="exam-block"
+                                        th:if="${selectedCourseId != null and selectedCourseId == c.id}">
+
+                                        <div class="exam-head">
+                                            <div class="details-label">Appelli disponibili</div>
+                                            <span class="mini-pill"
+                                                th:text="${exams != null ? exams.size() : 0}">0</span>
+                                        </div>
+
+                                        <div class="exam-list" th:if="${exams != null and !exams.isEmpty()}">
+                                            <a class="exam-item" th:each="e : ${exams}" th:href="${role.name() == 'PROFESSOR'} 
+                                                        ? @{/professor/iscritti(examId=${e.id})} 
+                                                        : @{/student/esito(examId=${e.id})}">
+                                                <div class="exam-date"
+                                                    th:text="${#temporals.format(e.date, 'dd/MM/yyyy')}">01/01/2026
+                                                </div>
+                                                <div class="exam-time" th:text="${#temporals.format(e.date, 'HH:mm')}">
+                                                    10:30</div>
+                                                <div class="exam-cta"
+                                                    th:text="${role.name() == 'PROFESSOR' ? 'Iscritti' : 'Esito'}">Apri
+                                                </div>
+                                            </a>
+                                        </div>
+
+                                        <div class="note" style="margin-top:10px;"
+                                            th:if="${exams == null or exams.isEmpty()}">
+                                            Nessun appello disponibile.
+                                        </div>
+                                    </div>
+
                                 </div>
                             </details>
                         </article>

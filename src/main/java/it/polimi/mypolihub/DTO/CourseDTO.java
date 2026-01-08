@@ -8,6 +8,7 @@ import it.polimi.mypolihub.entity.Student;
 import it.polimi.mypolihub.entity.User;
 
 public class CourseDTO {
+    private Integer id;
     private String name;
     private Integer cfu;
     private MajorDTO major;
@@ -15,6 +16,7 @@ public class CourseDTO {
     private Set<StudentDTO> students;
 
     public CourseDTO(Course course) {
+        id = course.getId();
         name = course.getName();
         cfu = course.getCfu();
         
@@ -29,6 +31,10 @@ public class CourseDTO {
 
             students.add(new StudentDTO(studentUserData, s));
         }
+    }
+
+    public Integer getId() {
+        return id;
     }
 
     public String getName() {
