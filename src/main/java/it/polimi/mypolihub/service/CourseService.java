@@ -39,7 +39,7 @@ public class CourseService {
         Course course = new Course();
         course.setName(name);
         course.setCfu(cfu);
-        course.setMajor(major);
+        //course.setMajor(major);
         course.setProfessor(professor);
 
         courseRepository.save(course);

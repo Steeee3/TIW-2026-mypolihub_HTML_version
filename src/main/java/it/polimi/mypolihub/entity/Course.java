@@ -5,6 +5,8 @@ import java.util.Set;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -18,7 +20,6 @@ import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "courses", indexes = {
-        @Index(name = "FK_courses_majors", columnList = "major_id"),
         @Index(name = "FK_courses_professors", columnList = "professor_id")
 })
 public class Course {
@@ -33,9 +34,9 @@ public class Course {
     @Column(name = "cfu", nullable = false)
     private Integer cfu;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "major_id", nullable = false)
-    private Major major;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "semester", nullable = false)
+    private Semester semester;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "professor_id", nullable = false)
@@ -65,12 +66,12 @@ public class Course {
         this.cfu = cfu;
     }
 
-    public Major getMajor() {
-        return major;
+    public Semester getSemester() {
+        return semester;
     }
 
-    public void setMajor(Major major) {
-        this.major = major;
+    public void setSemester(Semester semester) {
+        this.semester = semester;
     }
 
     public Professor getProfessor() {

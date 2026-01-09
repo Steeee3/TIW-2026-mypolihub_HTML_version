@@ -20,7 +20,7 @@ public class CourseDTO {
         name = course.getName();
         cfu = course.getCfu();
         
-        major = new MajorDTO(course.getMajor());
+        //major = new MajorDTO(course.getMajor());
 
         User professorUserData = course.getProfessor().getUser();
         professor = new ProfessorDTO(professorUserData);
