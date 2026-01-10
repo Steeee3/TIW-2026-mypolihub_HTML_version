@@ -86,6 +86,11 @@ body {
   border-radius: var(--radius);
   background: var(--surface);
   box-shadow: var(--shadow);
+
+  position: sticky;
+  top: 14px;
+  z-index: 10;
+  backdrop-filter: blur(10px);
 }
 
 .brand {
@@ -544,4 +549,132 @@ details.reveal .reveal-body {
   .icon {
     background: rgba(255, 255, 255, 0.22);
   }
+}
+
+.majors-years-wrap {
+  display: grid;
+  grid-template-columns: minmax(240px, 1fr) minmax(300px, 1.15fr);
+  gap: 18px;
+  align-items: start;
+  margin-top: 10px;
+}
+
+.majors-years-wrap--stack {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+.majors-years-wrap--stack .multi-select {
+  width: 100%;
+}
+
+.majors-years-wrap--stack .multi-select {
+  min-height: 220px;
+}
+
+.majors-col,
+.years-col {
+  min-width: 0;
+}
+
+.multi-select {
+  width: 100%;
+  min-height: 190px;
+  border-radius: 16px;
+  border: 1px solid var(--input-border);
+  background: var(--input-bg);
+  color: var(--text);
+  padding: 10px;
+  outline: none;
+}
+
+.multi-select option {
+  padding: 6px 8px;
+  border-radius: 10px;
+}
+
+.multi-select:focus {
+  border-color: rgba(0, 90, 165, 0.55);
+  box-shadow: 0 0 0 4px rgba(0, 90, 165, 0.16);
+}
+
+.years-panel {
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  border-radius: 16px;
+  padding: 12px;
+}
+
+.years-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.years-row {
+  display: grid;
+  grid-template-columns: 1fr 96px;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.years-major-name {
+  font-size: 12.5px;
+  font-weight: 750;
+  color: var(--text);
+  line-height: 1.15;
+}
+
+.years-major-sub {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+input[type=number] {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid var(--input-border);
+  background: var(--input-bg);
+  color: var(--text);
+  outline: none;
+  font: inherit;
+  text-align: left;
+  color-scheme: light dark;
+}
+
+input[type=number] {
+  border-color: rgba(0, 90, 165, 0.55);
+  box-shadow: 0 0 0 4px rgba(0, 90, 165, 0.16);
+}
+
+/* responsive: colonna unica */
+@media (max-width: 960px) {
+  .majors-years-wrap {
+    grid-template-columns: 1fr;
+  }
+
+  .years-input {
+    text-align: left;
+  }
+}
+
+.grid {
+  align-items: start;
+}
+
+.side {
+  display: grid;
+  gap: 18px;
+  align-content: start;
+  grid-auto-rows: max-content;
+}
+
+.side>.card {
+  height: fit-content;
 }

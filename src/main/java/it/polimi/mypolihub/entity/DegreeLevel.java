@@ -21,6 +21,10 @@ public class DegreeLevel {
     @Column(name = "yearsOfStudy", nullable = false)
     private Integer yearsOfStudy;
 
+    public Integer getId() {
+        return id;
+    }
+
     public String getName() {
         return name;
     }

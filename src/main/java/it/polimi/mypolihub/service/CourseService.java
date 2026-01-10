@@ -9,8 +9,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import it.polimi.mypolihub.DTO.CourseDTO;
 import it.polimi.mypolihub.entity.Course;
+import it.polimi.mypolihub.entity.CourseMajor;
 import it.polimi.mypolihub.entity.Major;
 import it.polimi.mypolihub.entity.Professor;
+import it.polimi.mypolihub.entity.Semester;
+import it.polimi.mypolihub.repository.CourseMajorRepository;
 import it.polimi.mypolihub.repository.CourseRepository;
 import it.polimi.mypolihub.repository.MajorRepository;
 import it.polimi.mypolihub.repository.ProfessorRepository;
@@ -26,23 +29,50 @@ public class CourseService {
 
     @Autowired
     private CourseRepository courseRepository;
-    
+
+    @Autowired
+    private CourseMajorRepository courseMajorRepository;
+
     @Transactional
-    public void createCourse(String rawName, Integer cfu, Integer majorId, Integer professorId) {
+    public void createCourse(String rawName, Integer cfu, Semester semester, List<Integer> majorIds,
+            List<Integer> yearsOfStudy, Integer professorId) {
         String name = rawName == null ? "" : rawName.trim().replaceAll("\\s+", " ");
 
-        if (name.isBlank()) throw new IllegalArgumentException("Course name is blank");
+        if (name.isBlank())
+            throw new IllegalArgumentException("Course name is blank");
 
-        Major major = majorRepository.findById(majorId).orElseThrow(() -> new IllegalArgumentException("Major does not exists"));
-        Professor professor = professorRepository.findById(professorId).orElseThrow(() -> new IllegalArgumentException("Professor does not exists"));
+        List<Major> majors = majorRepository.findAllById(majorIds);
+        if (majors.isEmpty()) {
+            throw new IllegalArgumentException("None of the major inserted exists");
+        }
+
+        Professor professor = professorRepository.findById(professorId)
+                .orElseThrow(() -> new IllegalArgumentException("Professor does not exists"));
 
         Course course = new Course();
         course.setName(name);
         course.setCfu(cfu);
-        //course.setMajor(major);
+        course.setSemester(semester);
         course.setProfessor(professor);
 
         courseRepository.save(course);
+        createJoinTableRows(course, majors, yearsOfStudy);
+    }
+
+    private void createJoinTableRows(Course course, List<Major> majors, List<Integer> yearsOfStudy) {
+        if (majors.size() != yearsOfStudy.size()) {
+            throw new IllegalArgumentException("The majors selected and relative years of study do not match");
+        }
+
+        for (int i = 0; i < majors.size(); i++) {
+            CourseMajor joinRow = new CourseMajor();
+
+            joinRow.setCourse(course);
+            joinRow.setMajor(majors.get(i));
+            joinRow.setYearOfStudy(yearsOfStudy.get(i));
+
+            courseMajorRepository.save(joinRow);
+        }
     }
 
     @Transactional

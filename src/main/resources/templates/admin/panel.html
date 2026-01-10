@@ -342,7 +342,7 @@
                             <div>
                                 <h3 class="card-title">Aggiungi Corso</h3>
                                 <p class="card-sub">
-                                    Crea un corso scegliendo la major e il professore esistente.
+                                    Crea un corso scegliendo una o più majors e il professore esistente.
                                 </p>
                             </div>
                             <span class="pill">Corsi</span>
@@ -366,18 +366,17 @@
                                     </div>
                                 </div>
 
-                                <div class="row">
-                                    <div class="field">
-                                        <div class="label">Major</div>
-                                        <select name="majorId" required>
-                                            <option value="" disabled selected>Seleziona una major…</option>
-                                            <option th:each="m : ${majors}" th:value="${m.id}" th:text="${m.name}">
-                                            </option>
+                                <div class="row" style="margin-top: 12px;">
+                                    <div class="field" style="max-width: 360px;">
+                                        <div class="label">Semestre</div>
+                                        <select name="semester" required>
+                                            <option value="" disabled selected>Seleziona semestre…</option>
+                                            <option value="PRIMO">Primo semestre</option>
+                                            <option value="SECONDO">Secondo semestre</option>
                                         </select>
-                                        <div class="help">Obbligatoria: determina il percorso di laurea.</div>
                                     </div>
 
-                                    <div class="field">
+                                    <div class="field" style="flex: 1;">
                                         <div class="label">Professore</div>
 
                                         <input type="text" name="professorId" list="professorsList"
@@ -391,6 +390,40 @@
 
                                         <div class="help">
                                             Inizia a digitare: ti verranno suggeriti i professori esistenti.
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="field" style="margin-top: 12px;">
+                                    <div class="label">Percorso di studi e anno del corso</div>
+
+                                    <div class="majors-years-wrap majors-years-wrap--stack">
+                                        <div class="majors-col">
+                                            <select id="majorsSelect" name="majorsUi" class="multi-select" multiple
+                                                required size="7">
+                                                <option th:each="m : ${majors}" th:value="${m.id}" th:attr="data-maxyears=${m.degreeLevel != null ? m.degreeLevel.yearsOfStudy : 1},
+                               data-majorname=${m.name},
+                               data-degreetag=${m.degreeLevel != null ? m.degreeLevel.name : ''}"
+                                                    th:text="|${m.name} · ${m.degreeLevel != null ? m.degreeLevel.name : ''}|">
+                                                </option>
+                                            </select>
+
+                                            <div class="help">
+                                                Seleziona almeno una major (Ctrl/Cmd per selezioni multiple).
+                                            </div>
+                                        </div>
+
+                                        <div class="years-col">
+                                            <div id="yearsPanel" class="years-panel">
+                                                <div class="note" style="margin:0;">Seleziona una o più majors per
+                                                    inserire gli anni.</div>
+                                            </div>
+
+                                            <div id="hiddenMajorsContainer"></div>
+
+                                            <div class="help">
+                                                Seleziona l'anno <strong>per ogni</strong> percorso di studi selzionato.
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -477,6 +510,18 @@
                                             required />
                                         <div class="help">Verranno rimossi doppi spazi e controllata l’unicità.</div>
                                     </div>
+
+                                    <div class="field">
+                                        <div class="label">Degree level</div>
+                                        <select name="degreeLevelId" required>
+                                            <option value="" disabled selected>Seleziona livello…</option>
+                                            <option th:each="dl : ${degreeLevels}" th:value="${dl.id}"
+                                                th:text="|${dl.name} · ${dl.yearsOfStudy} anni|">
+                                            </option>
+                                        </select>
+                                        <div class="help">Obbligatorio: associa la major al livello
+                                            (triennale/magistrale...).</div>
+                                    </div>
                                 </div>
 
                                 <div class="actions">
@@ -536,6 +581,103 @@
 
         </div>
     </div>
+
+    <script>
+        (() => {
+            const majorsSelect = document.getElementById('majorsSelect');
+            const yearsPanel = document.getElementById('yearsPanel');
+            const hidden = document.getElementById('hiddenMajorsContainer');
+
+            if (!majorsSelect || !yearsPanel || !hidden) return;
+
+            function clearNode(node) {
+                while (node.firstChild) node.removeChild(node.firstChild);
+            }
+
+            function getSelectedOptions() {
+                return Array.from(majorsSelect.selectedOptions);
+            }
+
+            function render() {
+                const selected = getSelectedOptions();
+
+                clearNode(yearsPanel);
+                clearNode(hidden);
+
+                if (selected.length === 0) {
+                    const note = document.createElement('div');
+                    note.className = 'note';
+                    note.style.margin = '0';
+                    note.textContent = 'Seleziona una o più majors per inserire gli anni.';
+                    yearsPanel.appendChild(note);
+                    return;
+                }
+
+                const grid = document.createElement('div');
+                grid.className = 'years-grid';
+
+                selected.forEach((opt) => {
+                    const majorId = opt.value;
+                    const majorName = opt.dataset.majorname || opt.textContent || '';
+                    const degreeTag = opt.dataset.degreetag || '';
+                    const maxYears = parseInt(opt.dataset.maxyears || '1', 10) || 1;
+
+                    const row = document.createElement('div');
+                    row.className = 'years-row';
+
+                    const left = document.createElement('div');
+
+                    const title = document.createElement('div');
+                    title.className = 'years-major-name';
+                    title.textContent = majorName;
+
+                    const sub = document.createElement('div');
+                    sub.className = 'years-major-sub';
+                    sub.textContent = `${degreeTag ? degreeTag + ' · ' : ''}max ${maxYears} anni`;
+
+                    left.appendChild(title);
+                    left.appendChild(sub);
+
+                    const input = document.createElement('input');
+                    input.className = 'years-input';
+                    input.type = 'number';
+                    input.min = '1';
+                    input.max = String(maxYears);
+                    input.step = '1';
+                    input.value = '1';
+                    input.inputMode = 'numeric';
+
+                    input.addEventListener('focus', () => input.select());
+
+                    const hMajor = document.createElement('input');
+                    hMajor.type = 'hidden';
+                    hMajor.name = 'majorId';
+                    hMajor.value = majorId;
+
+                    const hYear = document.createElement('input');
+                    hYear.type = 'hidden';
+                    hYear.name = 'yearsOfStudy';
+                    hYear.value = input.value;
+
+                    input.addEventListener('input', () => {
+                        hYear.value = input.value;
+                    });
+
+                    row.appendChild(left);
+                    row.appendChild(input);
+
+                    grid.appendChild(row);
+                    hidden.appendChild(hMajor);
+                    hidden.appendChild(hYear);
+                });
+
+                yearsPanel.appendChild(grid);
+            }
+
+            majorsSelect.addEventListener('change', render);
+            render();
+        })();
+    </script>
 </body>
 
 </html>

@@ -1,6 +1,7 @@
 package it.polimi.mypolihub.controller;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -13,7 +14,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 import it.polimi.mypolihub.DTO.UserImportReportDTO;
 import it.polimi.mypolihub.entity.Role;
+import it.polimi.mypolihub.entity.Semester;
 import it.polimi.mypolihub.repository.CourseRepository;
+import it.polimi.mypolihub.repository.DegreeLevelRepository;
 import it.polimi.mypolihub.repository.MajorRepository;
 import it.polimi.mypolihub.repository.ProfessorRepository;
 import it.polimi.mypolihub.repository.UserRepository;
@@ -50,14 +53,12 @@ public class AdminPanelController {
     @Autowired
     private CourseRepository courseRepository;
 
+    @Autowired
+    private DegreeLevelRepository degreeLevelRepository;
+
     @GetMapping("/panel")
     public String panel(Model model) {
-        model.addAttribute("majors", majorRepository.findAll());
-        model.addAttribute("usersCount", userRepository.count());
-        model.addAttribute("coursesCount", courseRepository.count());
-        model.addAttribute("professors", professorRepository.findAllWithUser());
-        model.addAttribute("courses", courseRepository.findAll());
-        model.addAttribute("report", null);
+        fillPanelModel(model, null);
 
         return "admin/panel";
     }
@@ -70,12 +71,7 @@ public class AdminPanelController {
             Model model) {
         UserImportReportDTO report = userCreatorService.importUsersFromUpload(file, role, defaultPassword, majorId);
 
-        model.addAttribute("majors", majorRepository.findAll());
-        model.addAttribute("usersCount", userRepository.count());
-        model.addAttribute("professors", professorRepository.findAllWithUser());
-        model.addAttribute("coursesCount", courseRepository.count());
-        model.addAttribute("courses", courseRepository.findAll());
-        model.addAttribute("report", report);
+        fillPanelModel(model, report);
 
         return "admin/panel";
     }
@@ -90,57 +86,43 @@ public class AdminPanelController {
             Model model) {
         UserImportReportDTO report = userCreatorService.createSingleUser(role, name, surname, password, majorId);
 
-        model.addAttribute("majors", majorRepository.findAll());
-        model.addAttribute("usersCount", userRepository.count());
-        model.addAttribute("professors", professorRepository.findAllWithUser());
-        model.addAttribute("coursesCount", courseRepository.count());
-        model.addAttribute("courses", courseRepository.findAll());
-        model.addAttribute("report", report);
+        fillPanelModel(model, report);
 
         return "admin/panel";
     }
 
     @PostMapping("/majors")
-    public String createMajor(@RequestParam("majorName") String majorName,
+    public String createMajor(@RequestParam("majorName") String majorName, @RequestParam("degreeLevelId") Integer degreeLevelId,
             Model model) {
 
         try {
-            majorService.createMajor(majorName);
+            majorService.createMajor(majorName, degreeLevelId);
             model.addAttribute("majorMsg", "Major creata: " + majorName);
         } catch (IllegalArgumentException e) {
             model.addAttribute("majorError", e.getMessage());
         }
 
-        model.addAttribute("report", null);
-        model.addAttribute("majors", majorRepository.findAll());
-        model.addAttribute("usersCount", userRepository.count());
-        model.addAttribute("professors", professorRepository.findAllWithUser());
-        model.addAttribute("coursesCount", courseRepository.count());
-        model.addAttribute("courses", courseRepository.findAll());
+        fillPanelModel(model, null);
 
         return "admin/panel";
     }
 
     @PostMapping("/courses")
-    public String createCourse(
-            @RequestParam("courseName") String courseName,
-            @RequestParam("cfu") Integer cfu,
-            @RequestParam("majorId") Integer majorId,
-            @RequestParam("professorId") Integer professorId,
-            Model model) {
+    public String createCourse(@RequestParam("courseName") String courseName,
+        @RequestParam("cfu") Integer cfu,
+        @RequestParam("semester") Semester semester,
+        @RequestParam("majorId") List<Integer> majorIds,
+        @RequestParam("yearsOfStudy") List<Integer> yearsOfStudy,
+        @RequestParam("professorId") Integer professorId,
+        Model model) {
         try {
-            courseService.createCourse(courseName, cfu, majorId, professorId);
+            courseService.createCourse(courseName, cfu, semester, majorIds, yearsOfStudy, professorId);
             model.addAttribute("majorMsg", "Corso creato: " + courseName);
         } catch (IllegalArgumentException e) {
             model.addAttribute("majorError", e.getMessage());
         }
 
-        model.addAttribute("report", null);
-        model.addAttribute("majors", majorRepository.findAll());
-        model.addAttribute("usersCount", userRepository.count());
-        model.addAttribute("professors", professorRepository.findAllWithUser());
-        model.addAttribute("coursesCount", courseRepository.count());
-        model.addAttribute("courses", courseRepository.findAll());
+        fillPanelModel(model, null);
 
         return "admin/panel";
     }
@@ -155,13 +137,18 @@ public class AdminPanelController {
             model.addAttribute("examError", e.getMessage());
         }
 
-        model.addAttribute("report", null);
-        model.addAttribute("majors", majorRepository.findAll());
-        model.addAttribute("usersCount", userRepository.count());
-        model.addAttribute("professors", professorRepository.findAllWithUser());
-        model.addAttribute("coursesCount", courseRepository.count());
-        model.addAttribute("courses", courseRepository.findAll());
+        fillPanelModel(model, null);
 
         return "admin/panel";
+    }
+
+    private void fillPanelModel(Model model, Object report) {
+        model.addAttribute("majors", majorRepository.findAllWithDegreeLevel());
+        model.addAttribute("degreeLevels", degreeLevelRepository.findAll());
+        model.addAttribute("usersCount", userRepository.count());
+        model.addAttribute("coursesCount", courseRepository.count());
+        model.addAttribute("professors", professorRepository.findAllWithUser());
+        model.addAttribute("courses", courseRepository.findAll());
+        model.addAttribute("report", report);
     }
 }
