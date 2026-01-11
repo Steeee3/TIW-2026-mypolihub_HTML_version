@@ -560,3 +560,15 @@
     border-color: rgba(255, 255, 255, 0.18);
   }
 }
+
+.btn-accent .icon.green {
+  background: rgba(52, 211, 153, .55) !important;
+}
+
+.btn-accent .icon.orange {
+  background: rgba(255, 122, 24, .70) !important;
+}
+
+.btn-accent .icon.purple {
+  background: rgba(99, 102, 241, .60) !important;
+}

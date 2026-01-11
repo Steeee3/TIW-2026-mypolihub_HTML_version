@@ -23,6 +23,9 @@
             </div>
 
             <div class="quick-actions">
+                <a class="btn btn-accent" th:href="@{/home}">
+                    <span class="icon orange"></span> Home
+                </a>
                 <a class="btn" th:href="@{/logout}">
                     <span class="icon"></span> Logout
                 </a>
@@ -191,11 +194,6 @@
                                                         th:text="|${r.student.number} · ${r.student.surname} ${r.student.name} · ${r.student.email}|">
                                                     </div>
                                                 </div>
-
-                                                <a class="btn btn-sm btn-ghost"
-                                                    th:href="@{/professor/exam(examId=${examId}, sort=${sortKey}, sortDir=${sortDir})}">
-                                                    Annulla
-                                                </a>
                                             </div>
 
                                             <form class="edit-form" method="post"

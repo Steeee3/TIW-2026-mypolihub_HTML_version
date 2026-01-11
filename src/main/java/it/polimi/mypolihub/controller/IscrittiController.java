@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import it.polimi.mypolihub.DTO.RegistrationDTO;
 import it.polimi.mypolihub.entity.Role;
@@ -91,7 +92,25 @@ public class IscrittiController {
     }
 
     @PostMapping("/professor/registrations/{registrationId}/result")
-    public String editResult(@PathVariable Integer registrationId, @RequestParam Integer resultId) {
-        return "redirect:/home";
+    public String editResult(
+        @PathVariable Integer registrationId,
+        @RequestParam Integer resultId,
+        @RequestParam(name = "examId", required = false) Integer examId,
+        @RequestParam(name = "sort", required = false) String sort,
+        @RequestParam(name = "sortDir", required = false) String sortDir,
+        Authentication auth,
+        Model model,
+        RedirectAttributes ra
+    ) {
+        examService.setResult(registrationId, resultId);
+        if (examId == null) {
+            return "redirect:/home";
+        }
+
+        ra.addAttribute("examId", examId);
+        ra.addAttribute("sort", sort);
+        ra.addAttribute("sortDir", sortDir);
+
+        return "redirect:/professor/exam";
     }
 }
