@@ -10,18 +10,24 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import it.polimi.mypolihub.DTO.RegistrationDTO;
 import it.polimi.mypolihub.entity.Role;
 import it.polimi.mypolihub.security.CustomUserDetails;
 import it.polimi.mypolihub.service.ExamService;
+import it.polimi.mypolihub.service.ResultService;
 
 @Controller
 public class IscrittiController {
 
     @Autowired
     private ExamService examService;
+
+    @Autowired
+    private ResultService resultService;
 
     private static final String DEFAULT_SORT = "student.number";
     private static final String DEFAULT_DIR = "asc";
@@ -45,6 +51,7 @@ public class IscrittiController {
             @RequestParam(name = "examId", required = false) Integer examId,
             @RequestParam(name = "sort", required = false) String sort,
             @RequestParam(name = "sortDir", required = false) String sortDir,
+            @RequestParam(name = "editStudentNumber", required = false) Integer editStudentNumber,
             @AuthenticationPrincipal CustomUserDetails principal,
             Authentication auth,
             Model model) {
@@ -72,10 +79,19 @@ public class IscrittiController {
         model.addAttribute("examId", examId);
         model.addAttribute("sortDir", sortDir);
         model.addAttribute("sortKey", sort);
+
         model.addAttribute("registrations", registrations);
+        model.addAttribute("results", resultService.getAllResults());
+        model.addAttribute("editStudentNumber", editStudentNumber);
+
         model.addAttribute("helloName", principal.getName());
         model.addAttribute("role", role);
 
         return "iscritti";
+    }
+
+    @PostMapping("/professor/registrations/{registrationId}/result")
+    public String editResult(@PathVariable Integer registrationId, @RequestParam Integer resultId) {
+        return "redirect:/home";
     }
 }

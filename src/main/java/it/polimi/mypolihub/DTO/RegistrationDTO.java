@@ -3,14 +3,21 @@ package it.polimi.mypolihub.DTO;
 import it.polimi.mypolihub.entity.Registration;
 
 public class RegistrationDTO {
+    private Integer id;
     private StudentDTO student;
     private String status;
-    private String result;
+    private ResultDTO result;
 
     public RegistrationDTO(Registration registration) {
+        id = registration.getId();
         student = new StudentDTO(registration.getStudent());
         status = registration.getStatus().getValue();
-        result = registration.getResult().getValue();
+
+        result = new ResultDTO(registration.getResult());
+    }
+
+    public Integer getId() {
+        return id;
     }
 
     public StudentDTO getStudent() {
@@ -21,7 +28,7 @@ public class RegistrationDTO {
         return status;
     }
 
-    public String getResult() {
+    public ResultDTO getResult() {
         return result;
     }
 }
