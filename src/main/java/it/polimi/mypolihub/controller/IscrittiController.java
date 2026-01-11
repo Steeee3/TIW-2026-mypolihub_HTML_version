@@ -56,9 +56,6 @@ public class IscrittiController {
             @AuthenticationPrincipal CustomUserDetails principal,
             Authentication auth,
             Model model) {
-
-        // TODO: prof deve avere quel corso
-
         Role role = Role.from(auth);
 
         if (examId == null) {
@@ -75,7 +72,7 @@ public class IscrittiController {
             sortDir = DEFAULT_DIR;
         }
 
-        List<RegistrationDTO> registrations = examService.getStudentsByExamIdSortedBy(examId, sortKey, sortDir);
+        List<RegistrationDTO> registrations = examService.getStudentsByExamIdSortedBy(principal.getId(), examId, sortKey, sortDir);
 
         model.addAttribute("examId", examId);
         model.addAttribute("sortDir", sortDir);
@@ -98,11 +95,11 @@ public class IscrittiController {
         @RequestParam(name = "examId", required = false) Integer examId,
         @RequestParam(name = "sort", required = false) String sort,
         @RequestParam(name = "sortDir", required = false) String sortDir,
-        Authentication auth,
+        @AuthenticationPrincipal CustomUserDetails principal,
         Model model,
         RedirectAttributes ra
     ) {
-        examService.setResult(registrationId, resultId);
+        examService.setResult(principal.getId(), registrationId, resultId);
         if (examId == null) {
             return "redirect:/home";
         }

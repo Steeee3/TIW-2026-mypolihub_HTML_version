@@ -6,6 +6,7 @@ import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,6 +14,7 @@ import it.polimi.mypolihub.DTO.ExamDTO;
 import it.polimi.mypolihub.DTO.RegistrationDTO;
 import it.polimi.mypolihub.entity.Course;
 import it.polimi.mypolihub.entity.Exam;
+import it.polimi.mypolihub.entity.Professor;
 import it.polimi.mypolihub.entity.Registration;
 import it.polimi.mypolihub.entity.Result;
 import it.polimi.mypolihub.entity.Status;
@@ -61,7 +63,7 @@ public class ExamService {
         examRepository.save(exam);
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public List<ExamDTO> getExamsForCourse(Integer courseId) {
         List<Exam> exams = examRepository.findAllByCourse_IdOrderByDateDesc(courseId);
 
@@ -70,10 +72,18 @@ public class ExamService {
                 .toList();
     }
 
-    @Transactional
-    public List<RegistrationDTO> getStudentsByExamIdSortedBy(Integer examId, String sortBy, String sortDir) {
+    @Transactional(readOnly = true)
+    public List<RegistrationDTO> getStudentsByExamIdSortedBy(Integer professorId, Integer examId, String sortBy, String sortDir) {
         Sort.Direction dir = "desc".equalsIgnoreCase(sortDir) ? Sort.Direction.DESC : Sort.Direction.ASC;
         Sort sort = Sort.by(dir, sortBy);
+
+        Exam exam = examRepository.findById(examId)
+            .orElseThrow(() -> new IllegalArgumentException("Exam does not exist"));
+        Professor courseProfessor = exam.getCourse().getProfessor();
+        if (!professorId.equals(courseProfessor.getId())) {
+            throw new AccessDeniedException("Access denied");
+        }
+
         List<Registration> registrations = registrationRepository.findByExam_Id(examId, sort);
 
         return registrations.stream()
@@ -82,9 +92,15 @@ public class ExamService {
     }
 
     @Transactional
-    public void setResult(Integer registrationId, Integer resultId) {
+    public void setResult(Integer professorId, Integer registrationId, Integer resultId) {
         Registration registration = registrationRepository.findById(registrationId)
             .orElseThrow(() -> new IllegalArgumentException("Registration does not exist"));
+
+        Exam exam = registration.getExam();
+        Professor courseProfessor = exam.getCourse().getProfessor();
+        if (!professorId.equals(courseProfessor.getId())) {
+            throw new AccessDeniedException("Assicurati di essere il docente associato al corso.");
+        }
 
         int oldStatus = registration.getStatus().getId();
         if (!EDITABLE_STATUS_IDS.contains(oldStatus)) {
@@ -99,5 +115,7 @@ public class ExamService {
         Result result = resultRepository.findById(resultId)
             .orElseThrow(() -> new IllegalArgumentException("Result does not exist"));
         registration.setResult(result);
+
+        registrationRepository.save(registration);
     }
 }
