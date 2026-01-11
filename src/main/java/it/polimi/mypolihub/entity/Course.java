@@ -1,8 +1,11 @@
 package it.polimi.mypolihub.entity;
 
 import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -16,6 +19,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 @Entity
@@ -45,6 +49,9 @@ public class Course {
     @ManyToMany
     @JoinTable(name = "courses_students", joinColumns = @JoinColumn(name = "course_id"), inverseJoinColumns = @JoinColumn(name = "student_id"))
     private Set<Student> students = new HashSet<>();
+
+    @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<CourseMajor> courseMajors = new LinkedHashSet<>();
 
     public Integer getId() {
         return id;
@@ -92,5 +99,34 @@ public class Course {
     public void removeStudent(Student s) {
         students.remove(s);
         s.getCourses().remove(this);
+    }
+
+    public Set<CourseMajor> getCourseMajors() {
+        return courseMajors;
+    }
+
+    public List<Major> getMajors() {
+        return courseMajors.stream()
+            .map(cm -> cm.getMajor())
+            .toList();
+    }
+
+    public void addMajor(Major major, Integer yearOfStudy) {
+        CourseMajor cm = new CourseMajor();
+
+        cm.setCourse(this);
+        cm.setMajor(major);
+        cm.setYearOfStudy(yearOfStudy);
+
+        courseMajors.add(cm);
+        major.getCourseMajors().add(cm);
+    }
+
+    public Integer getYearOfStudyForMajor(Major major) {
+        return courseMajors.stream()
+            .filter(cm -> cm.getMajor().getId() == major.getId())
+            .map(cm -> cm.getYearOfStudy())
+            .findFirst()
+            .orElse(null);
     }
 }

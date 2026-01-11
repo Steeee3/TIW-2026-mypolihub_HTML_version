@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import it.polimi.mypolihub.entity.Major;
 
@@ -17,4 +18,12 @@ public interface MajorRepository extends JpaRepository<Major, Integer> {
                 order by m.name asc
             """)
     List<Major> findAllWithDegreeLevel();
+
+    @Query(value = """
+        SELECT * 
+        FROM majors 
+        WHERE id IN (:ids)
+        ORDER BY FIELD(id, :ids)
+        """, nativeQuery = true)
+    List<Major> findAllByIdInOrder(@Param("ids") List<Integer> ids);
 }

@@ -1,9 +1,14 @@
 package it.polimi.mypolihub.DTO;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import it.polimi.mypolihub.entity.Course;
+import it.polimi.mypolihub.entity.Major;
+import it.polimi.mypolihub.entity.Semester;
 import it.polimi.mypolihub.entity.Student;
 import it.polimi.mypolihub.entity.User;
 
@@ -11,16 +16,16 @@ public class CourseDTO {
     private Integer id;
     private String name;
     private Integer cfu;
-    private MajorDTO major;
+    private Semester semester;
     private ProfessorDTO professor;
     private Set<StudentDTO> students;
+    private Map<MajorDTO, Integer> majorAndYear;
 
     public CourseDTO(Course course) {
         id = course.getId();
         name = course.getName();
         cfu = course.getCfu();
-        
-        //major = new MajorDTO(course.getMajor());
+        semester = course.getSemester();
 
         User professorUserData = course.getProfessor().getUser();
         professor = new ProfessorDTO(professorUserData);
@@ -30,6 +35,13 @@ public class CourseDTO {
             User studentUserData = s.getUser();
 
             students.add(new StudentDTO(studentUserData, s));
+        }
+
+        majorAndYear = new HashMap<>();
+        for (Major m : course.getMajors()) {
+            Integer yearOfStudy = course.getYearOfStudyForMajor(m);
+
+            majorAndYear.put(new MajorDTO(m), yearOfStudy);
         }
     }
 
@@ -45,8 +57,8 @@ public class CourseDTO {
         return cfu;
     }
 
-    public MajorDTO getMajor() {
-        return major;
+    public Semester getSemester() {
+        return semester;
     }
 
     public ProfessorDTO getProfessor() {
@@ -55,5 +67,13 @@ public class CourseDTO {
 
     public Set<StudentDTO> getStudents() {
         return students;
+    }
+
+    public List<MajorDTO> getMajors() {
+        return majorAndYear.keySet().stream().toList();
+    }
+
+    public Integer getYearOfStudyForMajor(MajorDTO major) {
+        return majorAndYear.get(major);
     }
 }

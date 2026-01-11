@@ -408,6 +408,10 @@
   line-height: 1.35;
 }
 
+.details-value>div {
+  text-align: right;
+}
+
 .muted {
   color: var(--muted);
   font-weight: 650;

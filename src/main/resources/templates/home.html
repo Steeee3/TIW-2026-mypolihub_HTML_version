@@ -106,7 +106,6 @@
                             th:classappend="${selectedCourseId != null and selectedCourseId == c.id} ? ' is-selected' : ''"
                             th:attr="data-name=${#strings.toLowerCase(c.name)},
                                      data-cfu=${c.cfu},
-                                     data-major=${#strings.toLowerCase(c.major != null ? c.major.name : '')},
                                      data-prof=${#strings.toLowerCase(c.professor != null ? (c.professor.name + ' ' + c.professor.surname) : '')}">
                             <div class="course-accent"></div>
 
@@ -122,7 +121,8 @@
 
                                         <span class="badge badge-soft">
                                             <span class="chip-ico purple"></span>
-                                            <span th:text="${c.major != null ? c.major.name : '—'}">Major</span>
+                                            <span
+                                                th:text="${c.semester != null ? c.semester + ' SEMESTRE' : '—'}">Semestre</span>
                                         </span>
 
                                         <span class="badge badge-soft">
@@ -155,10 +155,10 @@
                                         <span class="chev"></span>
                                         Dettagli
                                     </span>
-                                    <span class="summary-right">
+                                    <!-- <span class="summary-right">
                                         <span class="mini-pill"
                                             th:text="${c.major != null ? c.major.name : '—'}">—</span>
-                                    </span>
+                                    </span> -->
                                 </summary>
 
                                 <div class="details-body">
@@ -170,8 +170,25 @@
                                     </div>
 
                                     <div class="details-row">
+                                        <div class="details-label">Semestre</div>
+                                        <div class="details-value">
+                                            <span
+                                                th:text="${c.semester != null ? c.semester + ' SEMESTRE' : '—'}">0</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="details-row">
                                         <div class="details-label">Percorso</div>
-                                        <div class="details-value" th:text="${c.major != null ? c.major.name : '—'}">—
+                                        <div class="details-value">
+                                            <div th:each="m : ${c.majors}">
+                                                <span th:text="${m != null ? m.name : '—'}">—</span>
+                                                ·
+                                                <span
+                                                    th:text="${m != null && m.degreeLevel != null ? m.degreeLevel.name : '—'}">—</span>
+                                                <br>
+                                                <span class="major-year"
+                                                    th:text="${c.getYearOfStudyForMajor(m) != null ? c.getYearOfStudyForMajor(m) + ' Anno' : '—'}">—</span>
+                                            </div>
                                         </div>
                                     </div>
 
@@ -197,7 +214,6 @@
                                         </div>
                                     </div>
 
-                                    <!-- APPELLI: mostrali SOLO se questo è il corso selezionato -->
                                     <div class="exam-block"
                                         th:if="${selectedCourseId != null and selectedCourseId == c.id}">
 
