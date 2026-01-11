@@ -1,0 +1,150 @@
+.table-wrap {
+    border: 1px solid var(--border);
+    background: var(--surface);
+    border-radius: var(--radius);
+    overflow: auto;
+    max-height: 62vh;
+    /* scroll interno (header tabella sticky) */
+    box-shadow: var(--shadow);
+}
+
+/* Tabella */
+.table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    min-width: 900px;
+    /* evita comprimere troppo: scroll orizzontale se serve */
+}
+
+.table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+
+    background: color-mix(in srgb, var(--surface) 88%, transparent);
+    backdrop-filter: blur(10px);
+
+    border-bottom: 1px solid rgba(0, 40, 90, 0.10);
+    padding: 12px 12px;
+    text-align: left;
+
+    font-size: 12px;
+    font-weight: 820;
+    color: var(--muted);
+    white-space: nowrap;
+}
+
+@media (prefers-color-scheme: dark) {
+    .table thead th {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.10);
+    }
+}
+
+/* Link header (sorting server-side) */
+.th-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: inherit;
+    text-decoration: none;
+    user-select: none;
+}
+
+.table thead th:hover {
+    color: var(--text);
+}
+
+.table thead th.is-active {
+    color: var(--text);
+}
+
+/* Iconcina sort */
+.sort-ico {
+    width: 16px;
+    height: 16px;
+    border-radius: 8px;
+
+    position: relative;
+}
+
+.sort-ico::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    margin: auto;
+    width: 6px;
+    height: 6px;
+    border-right: 2px solid color-mix(in srgb, var(--text) 70%, transparent);
+    border-bottom: 2px solid color-mix(in srgb, var(--text) 70%, transparent);
+    transform: rotate(45deg);
+    top: 4px;
+    /* default: freccia giù */
+}
+
+.sort-ico.asc::before {
+    transform: rotate(-135deg);
+    /* freccia su */
+    top: 6px;
+}
+
+.sort-ico.desc::before {
+    transform: rotate(45deg);
+    /* freccia giù */
+    top: 4px;
+}
+
+/* Celle */
+.table tbody td {
+    padding: 12px 12px;
+    border-bottom: 1px solid rgba(0, 40, 90, 0.08);
+    font-size: 13px;
+    color: var(--text);
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+@media (prefers-color-scheme: dark) {
+    .table tbody td {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+}
+
+.table tbody tr:hover td {
+    background: color-mix(in srgb, var(--chip-bg) 55%, transparent);
+}
+
+/* Colonne "numeriche" o email: meglio tabular */
+.mono {
+    font-variant-numeric: tabular-nums;
+}
+
+/* Tag Result/Status */
+.tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 7px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--chip-border);
+    background: var(--chip-bg);
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--text);
+}
+
+.tag.is-empty {
+    opacity: .75;
+}
+
+/* Colonna azioni allineata a destra */
+.th-actions,
+.actions-cell {
+    text-align: right;
+}
+
+/* Bottone più compatto */
+.btn-sm {
+    padding: 9px 12px;
+    border-radius: 14px;
+    font-size: 12.5px;
+}

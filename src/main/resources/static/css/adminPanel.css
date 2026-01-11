@@ -648,7 +648,7 @@ input[type=number] {
   color-scheme: light dark;
 }
 
-input[type=number] {
+input[type=number]:focus {
   border-color: rgba(0, 90, 165, 0.55);
   box-shadow: 0 0 0 4px rgba(0, 90, 165, 0.16);
 }

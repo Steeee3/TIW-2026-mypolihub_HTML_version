@@ -10,7 +10,6 @@ import it.polimi.mypolihub.entity.Course;
 import it.polimi.mypolihub.entity.Major;
 import it.polimi.mypolihub.entity.Semester;
 import it.polimi.mypolihub.entity.Student;
-import it.polimi.mypolihub.entity.User;
 
 public class CourseDTO {
     private Integer id;
@@ -27,14 +26,11 @@ public class CourseDTO {
         cfu = course.getCfu();
         semester = course.getSemester();
 
-        User professorUserData = course.getProfessor().getUser();
-        professor = new ProfessorDTO(professorUserData);
+        professor = new ProfessorDTO(course.getProfessor());
 
         students = new HashSet<>();
         for (Student s : course.getStudents()) {
-            User studentUserData = s.getUser();
-
-            students.add(new StudentDTO(studentUserData, s));
+            students.add(new StudentDTO(s));
         }
 
         majorAndYear = new HashMap<>();

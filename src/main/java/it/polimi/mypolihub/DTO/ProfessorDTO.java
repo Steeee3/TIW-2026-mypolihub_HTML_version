@@ -1,5 +1,6 @@
 package it.polimi.mypolihub.DTO;
 
+import it.polimi.mypolihub.entity.Professor;
 import it.polimi.mypolihub.entity.User;
 
 public class ProfessorDTO {
@@ -7,10 +8,12 @@ public class ProfessorDTO {
     private String surname;
     private String email;
 
-    public ProfessorDTO(User professor) {
-        name = professor.getName();
-        surname = professor.getSurname();
-        email = professor.getEmail();
+    public ProfessorDTO(Professor professor) {
+        User userData = professor.getUser();
+
+        name = userData.getName();
+        surname = userData.getSurname();
+        email = userData.getEmail();
     }
 
     public String getName() {

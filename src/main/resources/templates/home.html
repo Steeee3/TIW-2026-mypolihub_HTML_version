@@ -155,10 +155,6 @@
                                         <span class="chev"></span>
                                         Dettagli
                                     </span>
-                                    <!-- <span class="summary-right">
-                                        <span class="mini-pill"
-                                            th:text="${c.major != null ? c.major.name : '—'}">—</span>
-                                    </span> -->
                                 </summary>
 
                                 <div class="details-body">
@@ -225,7 +221,7 @@
 
                                         <div class="exam-list" th:if="${exams != null and !exams.isEmpty()}">
                                             <a class="exam-item" th:each="e : ${exams}" th:href="${role.name() == 'PROFESSOR'} 
-                                                        ? @{/professor/iscritti(examId=${e.id})} 
+                                                        ? @{/professor/exam(examId=${e.id})} 
                                                         : @{/student/esito(examId=${e.id})}">
                                                 <div class="exam-date"
                                                     th:text="${#temporals.format(e.date, 'dd/MM/yyyy')}">01/01/2026

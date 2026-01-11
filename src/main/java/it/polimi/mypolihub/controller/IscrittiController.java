@@ -1,0 +1,81 @@
+package it.polimi.mypolihub.controller;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import it.polimi.mypolihub.DTO.RegistrationDTO;
+import it.polimi.mypolihub.entity.Role;
+import it.polimi.mypolihub.security.CustomUserDetails;
+import it.polimi.mypolihub.service.ExamService;
+
+@Controller
+public class IscrittiController {
+
+    @Autowired
+    private ExamService examService;
+
+    private static final String DEFAULT_SORT = "student.number";
+    private static final String DEFAULT_DIR = "asc";
+
+    private static final Set<String> ALLOWED_SORTS = Set.of(
+            "student.number",
+            "student.surname",
+            "student.name",
+            "student.email",
+            "result",
+            "status");
+    private final Map<String, String> SORT_MAPPING = Map.of(
+            "student.surname", "student.user.surname",
+            "student.name", "student.user.name",
+            "student.email", "student.user.email",
+            "result", "result.id",
+            "status", "status.id");
+
+    @GetMapping("/professor/exam")
+    public String iscritti(
+            @RequestParam(name = "examId", required = false) Integer examId,
+            @RequestParam(name = "sort", required = false) String sort,
+            @RequestParam(name = "sortDir", required = false) String sortDir,
+            @AuthenticationPrincipal CustomUserDetails principal,
+            Authentication auth,
+            Model model) {
+
+        // TODO: prof deve avere quel corso
+
+        Role role = Role.from(auth);
+
+        if (examId == null) {
+            return "redirect:/home";
+        }
+
+        sort = (sort == null || sort.isBlank()) ? DEFAULT_SORT : sort;
+        if (!ALLOWED_SORTS.contains(sort)) {
+            sort = DEFAULT_SORT;
+        }
+        String sortKey = SORT_MAPPING.getOrDefault(sort, sort);
+
+        if (sortDir == null || sortDir.isBlank()) {
+            sortDir = DEFAULT_DIR;
+        }
+
+        List<RegistrationDTO> registrations = examService.getStudentsByExamIdSortedBy(examId, sortKey, sortDir);
+
+        model.addAttribute("examId", examId);
+        model.addAttribute("sortDir", sortDir);
+        model.addAttribute("sortKey", sort);
+        model.addAttribute("registrations", registrations);
+        model.addAttribute("helloName", principal.getName());
+        model.addAttribute("role", role);
+
+        return "iscritti";
+    }
+}

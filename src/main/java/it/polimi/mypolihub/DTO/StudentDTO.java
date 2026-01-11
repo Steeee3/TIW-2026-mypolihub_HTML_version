@@ -10,13 +10,15 @@ public class StudentDTO {
     private Integer number;
     private MajorDTO major;
 
-    public StudentDTO(User userData, Student studentData) {
+    public StudentDTO(Student student) {
+        User userData = student.getUser();
+
         name = userData.getName();
         surname = userData.getSurname();
         email = userData.getEmail();
 
-        number = studentData.getNumber();
-        major = new MajorDTO(studentData.getMajor());
+        number = student.getNumber();
+        major = new MajorDTO(student.getMajor());
     }
 
     public String getName() {
