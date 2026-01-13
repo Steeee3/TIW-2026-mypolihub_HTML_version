@@ -27,6 +27,10 @@
                 <a class="btn btn-accent" th:href="@{/home}">
                     <span class="icon orange"></span> Home
                 </a>
+                <a class="btn btn-accent" th:if="${role != null and role.name() == 'PROFESSOR'}"
+                    th:href="@{/professor/reports}">
+                    <span class="icon purple"></span> Verbali
+                </a>
                 <a class="btn" th:href="@{/logout}">
                     <span class="icon"></span> Logout
                 </a>
@@ -76,7 +80,9 @@
                 <div class="stat-card">
                     <div class="stat-top">
                         <div class="stat-title">Carico CFU</div>
-                        <div class="stat-badge" th:text="${courses != null ? #aggregates.sum(courses.![cfu]) : 0}">
+                        <div class="stat-badge"
+                            th:with="sumCfu=${courses != null ? #aggregates.sum(courses.![cfu]) : null}"
+                            th:text="${sumCfu != null ? sumCfu : 0}">
                             0
                         </div>
                     </div>
@@ -270,7 +276,11 @@
                             <div class="txt">Corsi</div>
                         </div>
                         <div class="box">
-                            <div class="num" th:text="${courses != null ? #aggregates.sum(courses.![cfu]) : 0}">0</div>
+                            <div class="num"
+                                th:with="sumCfu=${courses != null ? #aggregates.sum(courses.![cfu]) : null}"
+                                th:text="${sumCfu != null ? sumCfu : 0}">
+                                0
+                            </div>
                             <div class="txt">CFU totali</div>
                         </div>
                     </div>

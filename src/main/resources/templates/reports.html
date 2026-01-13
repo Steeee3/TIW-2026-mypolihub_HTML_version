@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="it" xmlns="www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verbali · MyPoliHub</title>
+
+    <link rel="stylesheet" href="/css/adminPanel.css" />
+    <link rel="stylesheet" th:href="@{/css/home.css(v=${#dates.createNow().time})}">
+    <link rel="stylesheet" th:href="@{/css/reports.css(v=${#dates.createNow().time})}">
+</head>
+
+<body>
+    <div class="container home-shell">
+
+        <!-- TOPBAR -->
+        <header class="topbar home-topbar">
+            <div class="brand">
+                <div class="logo">MP</div>
+                <div class="title">
+                    <h1>MyPoliHub</h1>
+                    <span th:text="|Ciao ${helloName} 👋|">Ciao 👋</span>
+                </div>
+            </div>
+
+            <div class="quick-actions">
+                <a class="btn btn-accent" th:href="@{/home}">
+                    <span class="icon orange"></span> Home
+                </a>
+                <a class="btn btn-accent" th:href="@{/professor/reports}">
+                    <span class="icon purple"></span> Verbali
+                </a>
+                <a class="btn" th:href="@{/logout}">
+                    <span class="icon"></span> Logout
+                </a>
+            </div>
+        </header>
+
+        <!-- HERO -->
+        <section class="hero">
+            <div class="hero-left">
+                <div class="hero-pill">
+                    <span class="dot"></span>
+                    <span th:text="|Dashboard ${role != null ? role : ''}|">Dashboard</span>
+                </div>
+
+                <h2 class="hero-title">Verbali</h2>
+                <p class="hero-sub">
+                    Elenco dei verbali creati: ordinati per <strong>nome del corso</strong> (A→Z) e per <strong>data
+                        appello</strong> (crescente).
+                    Apri un corso e clicca un verbale per vedere i dettagli.
+                </p>
+            </div>
+
+            <aside class="hero-right">
+                <div class="stat-card">
+                    <div class="stat-top">
+                        <div class="stat-title">Totale verbali</div>
+                        <div class="stat-badge" th:text="${reportsCount != null ? reportsCount : 0}">0</div>
+                    </div>
+                    <div class="stat-sub">Verbali creati dal tuo account</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-top">
+                        <div class="stat-title">Corsi con verbali</div>
+                        <div class="stat-badge"
+                            th:text="${coursesWithReportsCount != null ? coursesWithReportsCount : 0}">0</div>
+                    </div>
+                    <div class="stat-sub">Numero di corsi che hanno almeno un verbale</div>
+                </div>
+            </aside>
+        </section>
+
+        <!-- MAIN -->
+        <main class="main-grid">
+            <!-- COURSES -->
+            <section class="card courses-card">
+                <div class="card-header">
+                    <div>
+                        <h2 class="card-title">Verbali per corso</h2>
+                        <p class="card-sub">Apri “Verbali” per vedere la lista.</p>
+                    </div>
+                    <span class="pill" th:text="|Totali: ${reportsCount != null ? reportsCount : 0}|">Totali: 0</span>
+                </div>
+
+                <div class="card-body">
+                    <div class="note" th:if="${reports == null or reports.isEmpty()}">
+                        Non hai ancora creato alcun verbale.
+                    </div>
+                    <div class="note" th:if="${courses == null or courses.isEmpty()}">
+                        Nessun corso con verbali disponibile.
+                    </div>
+
+                    <div id="coursesGrid" class="courses-grid" th:if="${courses != null}">
+                        <article class="course-card" th:each="c : ${courses}" th:id="|course-${c.id}|"
+                            th:with="courseReports=${reportsByCourseId[c.id]}">
+
+                            <div class="course-accent"></div>
+
+                            <div class="course-head">
+                                <div class="course-head-left">
+                                    <h3 class="course-name" th:text="${c.name}">Nome corso</h3>
+
+                                    <div class="course-badges">
+                                        <span class="badge">
+                                            <span class="chip-ico"></span>
+                                            <span th:text="|${c.cfu} CFU|">0 CFU</span>
+                                        </span>
+
+                                        <span class="badge badge-soft">
+                                            <span class="chip-ico purple"></span>
+                                            <span
+                                                th:text="${c.semester != null ? c.semester + ' SEMESTRE' : '—'}">Semestre</span>
+                                        </span>
+
+                                        <span class="badge badge-soft">
+                                            <span class="chip-ico orange"></span>
+                                            <span
+                                                th:text="${c.professor != null ? (c.professor.name + ' ' + c.professor.surname) : '—'}">Docente</span>
+                                        </span>
+
+                                        <a class="btn btn-accent" style="padding: 9px 12px;"
+                                            th:href="|#course-${c.id}|">
+                                            <span class="icon"></span> Mostra Verbali
+                                        </a>
+                                    </div>
+                                </div>
+
+                                <div class="course-kpi">
+                                    <div class="k">
+                                        <div class="num" th:text="${courseReports != null ? courseReports.size() : 0}">0
+                                        </div>
+                                        <div class="txt">Verbali</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <details class="course-details">
+                                <summary>
+                                    <span class="summary-left">
+                                        <span class="chev"></span>
+                                        Verbali
+                                    </span>
+                                </summary>
+
+                                <div class="details-body">
+
+                                    <div class="details-row">
+                                        <div class="details-label">Docente</div>
+                                        <div class="details-value"
+                                            th:text="${c.professor != null ? (c.professor.name + ' ' + c.professor.surname) : '—'}">
+                                            —</div>
+                                    </div>
+
+                                    <div class="details-row" th:if="${c.majors != null and !c.majors.isEmpty()}">
+                                        <div class="details-label">Percorso</div>
+                                        <div class="details-value">
+                                            <div th:each="m : ${c.majors}">
+                                                <span th:text="${m != null ? m.name : '—'}">—</span> ·
+                                                <span
+                                                    th:text="${m != null && m.degreeLevel != null ? m.degreeLevel.name : '—'}">—</span>
+                                                <br>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="exam-block">
+                                        <div class="exam-head">
+                                            <div class="details-label">Verbali disponibili</div>
+                                            <span class="mini-pill"
+                                                th:text="${courseReports != null ? courseReports.size() : 0}">0</span>
+                                        </div>
+
+                                        <div class="exam-list"
+                                            th:if="${courseReports != null and !courseReports.isEmpty()}">
+                                            <a class="exam-item" th:each="r : ${courseReports}"
+                                                th:href="@{/professor/reports(reportId=${r.id})}"
+                                                th:with="rows=${r.registrations != null ? r.registrations.size() : 0}">
+
+                                                <div class="exam-date"
+                                                    th:text="${#temporals.format(r.exam.date, 'dd/MM/yyyy')}">01/01/2026
+                                                </div>
+                                                <div class="exam-time"
+                                                    th:text="${#temporals.format(r.exam.date, 'HH:mm')}">10:30</div>
+                                                <div class="exam-cta" th:text="|Verbale #${r.id}|">Apri
+                                                </div>
+                                            </a>
+                                        </div>
+
+                                        <div class="note" style="margin-top:10px;"
+                                            th:if="${courseReports == null or courseReports.isEmpty()}">
+                                            Nessun verbale disponibile.
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </details>
+                        </article>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SIDE -->
+            <aside class="side-col">
+                <section class="card mini side-card">
+                    <h3>Come funziona</h3>
+                    <p class="note">
+                        Apri un corso → sezione “Verbali” → clicca un verbale per vedere i dettagli e la tabella delle
+                        righe verbalizzate.
+                    </p>
+                </section>
+
+                <section class="card mini side-card">
+                    <h3>Stato</h3>
+                    <div class="kpi">
+                        <div class="box">
+                            <div class="num" th:text="${reportsCount != null ? reportsCount : 0}">0</div>
+                            <div class="txt">Verbali</div>
+                        </div>
+                        <div class="box">
+                            <div class="num" th:text="${coursesWithReportsCount != null ? coursesWithReportsCount : 0}">
+                                0</div>
+                            <div class="txt">Corsi</div>
+                        </div>
+                    </div>
+                </section>
+            </aside>
+        </main>
+
+    </div>
+</body>
+
+</html>

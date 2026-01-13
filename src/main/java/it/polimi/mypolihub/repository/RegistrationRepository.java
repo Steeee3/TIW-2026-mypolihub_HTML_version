@@ -15,6 +15,7 @@ import it.polimi.mypolihub.entity.Status;
 
 public interface RegistrationRepository extends JpaRepository<Registration, Integer> {
     List<Registration> findByExam_Id(Integer examId, Sort sort);
+    List<Registration> findByReport_Id(Integer reportId, Sort sort);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""

@@ -73,7 +73,8 @@ public class IscrittiController {
             sortDir = DEFAULT_DIR;
         }
 
-        List<RegistrationDTO> registrations = examService.getStudentsByExamIdSortedBy(principal.getId(), examId, sortKey, sortDir);
+        List<RegistrationDTO> registrations = examService.getStudentsByExamIdSortedBy(principal.getId(), examId,
+                sortKey, sortDir);
 
         model.addAttribute("examId", examId);
         model.addAttribute("sortDir", sortDir);
@@ -93,14 +94,13 @@ public class IscrittiController {
 
     @PostMapping("/professor/registrations/{registrationId}/result")
     public String editResult(
-        @PathVariable Integer registrationId,
-        @RequestParam Integer resultId,
-        @RequestParam(name = "examId", required = false) Integer examId,
-        @RequestParam(name = "sort", required = false) String sort,
-        @RequestParam(name = "sortDir", required = false) String sortDir,
-        @AuthenticationPrincipal CustomUserDetails principal,
-        RedirectAttributes ra
-    ) {
+            @PathVariable Integer registrationId,
+            @RequestParam Integer resultId,
+            @RequestParam(name = "examId", required = false) Integer examId,
+            @RequestParam(name = "sort", required = false) String sort,
+            @RequestParam(name = "sortDir", required = false) String sortDir,
+            @AuthenticationPrincipal CustomUserDetails principal,
+            RedirectAttributes ra) {
         try {
             examService.setResult(principal.getId(), registrationId, resultId);
         } catch (IllegalArgumentException e) {
@@ -119,12 +119,11 @@ public class IscrittiController {
 
     @PostMapping("/professor/exam/{examId}/publish")
     public String publishResults(
-        @PathVariable Integer examId,
-        @RequestParam(name = "sort", required = false) String sort,
-        @RequestParam(name = "sortDir", required = false) String sortDir,
-        @AuthenticationPrincipal CustomUserDetails principal,
-        RedirectAttributes ra
-    ) {
+            @PathVariable Integer examId,
+            @RequestParam(name = "sort", required = false) String sort,
+            @RequestParam(name = "sortDir", required = false) String sortDir,
+            @AuthenticationPrincipal CustomUserDetails principal,
+            RedirectAttributes ra) {
         try {
             examService.publishResults(principal.getId(), examId);
         } catch (IllegalArgumentException e) {
@@ -140,12 +139,11 @@ public class IscrittiController {
 
     @PostMapping("/professor/exam/{examId}/finalize")
     public String finalizeResults(
-        @PathVariable Integer examId,
-        @RequestParam(name = "sort", required = false) String sort,
-        @RequestParam(name = "sortDir", required = false) String sortDir,
-        @AuthenticationPrincipal CustomUserDetails principal,
-        RedirectAttributes ra
-    ) {
+            @PathVariable Integer examId,
+            @RequestParam(name = "sort", required = false) String sort,
+            @RequestParam(name = "sortDir", required = false) String sortDir,
+            @AuthenticationPrincipal CustomUserDetails principal,
+            RedirectAttributes ra) {
         try {
             int reportId = examService.finalizeResults(principal.getId(), examId);
 
