@@ -572,3 +572,33 @@
 .btn-accent .icon.purple {
   background: rgba(99, 102, 241, .60) !important;
 }
+
+.note.note-danger {
+  margin-top: 12px;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+
+  padding: 10px 14px;
+  border-radius: 16px;
+
+  background: color-mix(in srgb, #ef4444 10%, var(--surface));
+  border: 1px solid color-mix(in srgb, #ef4444 40%, var(--border));
+  color: var(--text);
+}
+
+.note.note-danger strong {
+  color: color-mix(in srgb, #ef4444 75%, var(--text));
+  font-weight: 900;
+}
+
+.note.note-danger span {
+  color: color-mix(in srgb, var(--text) 88%, var(--muted));
+}
+
+@media (prefers-color-scheme: dark) {
+  .note.note-danger {
+    background: color-mix(in srgb, #ef4444 14%, var(--surface));
+    border-color: color-mix(in srgb, #ef4444 45%, var(--border));
+  }
+}

@@ -53,6 +53,7 @@ public class IscrittiController {
             @RequestParam(name = "sort", required = false) String sort,
             @RequestParam(name = "sortDir", required = false) String sortDir,
             @RequestParam(name = "editStudentNumber", required = false) Integer editStudentNumber,
+            @RequestParam(name = "errorMessage", required = false) String errorMessage,
             @AuthenticationPrincipal CustomUserDetails principal,
             Authentication auth,
             Model model) {
@@ -85,6 +86,8 @@ public class IscrittiController {
         model.addAttribute("helloName", principal.getName());
         model.addAttribute("role", role);
 
+        model.addAttribute("errorMessage", errorMessage);
+
         return "iscritti";
     }
 
@@ -98,7 +101,11 @@ public class IscrittiController {
         @AuthenticationPrincipal CustomUserDetails principal,
         RedirectAttributes ra
     ) {
-        examService.setResult(principal.getId(), registrationId, resultId);
+        try {
+            examService.setResult(principal.getId(), registrationId, resultId);
+        } catch (IllegalArgumentException e) {
+            ra.addAttribute("errorMessage", e.getMessage());
+        }
         if (examId == null) {
             return "redirect:/home";
         }
@@ -118,7 +125,11 @@ public class IscrittiController {
         @AuthenticationPrincipal CustomUserDetails principal,
         RedirectAttributes ra
     ) {
-        examService.publishResults(principal.getId(), examId);
+        try {
+            examService.publishResults(principal.getId(), examId);
+        } catch (IllegalArgumentException e) {
+            ra.addAttribute("errorMessage", e.getMessage());
+        }
 
         ra.addAttribute("examId", examId);
         ra.addAttribute("sort", sort);
@@ -135,7 +146,14 @@ public class IscrittiController {
         @AuthenticationPrincipal CustomUserDetails principal,
         RedirectAttributes ra
     ) {
-        examService.finalizeResults(principal.getId(), examId);
+        try {
+            int reportId = examService.finalizeResults(principal.getId(), examId);
+
+            ra.addAttribute("reportId", reportId);
+            return "redirect:/professor/reports";
+        } catch (IllegalArgumentException e) {
+            ra.addAttribute("errorMessage", e.getMessage());
+        }
 
         ra.addAttribute("examId", examId);
         ra.addAttribute("sort", sort);

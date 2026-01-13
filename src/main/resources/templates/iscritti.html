@@ -32,6 +32,11 @@
             </div>
         </header>
 
+        <div class="note note-danger" th:if="${errorMessage != null and !#strings.isEmpty(errorMessage)}">
+            <strong>Errore:</strong>
+            <span th:text="${errorMessage}">Messaggio di errore…</span>
+        </div>
+
         <section class="card" style="margin-top:18px;">
             <div class="card-header">
                 <div>

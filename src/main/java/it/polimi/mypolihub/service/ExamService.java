@@ -107,7 +107,7 @@ public class ExamService {
     @Transactional
     public void setResult(Integer professorId, Integer registrationId, Integer resultId) {
         Registration registration = registrationRepository.findById(registrationId)
-                .orElseThrow(() -> new IllegalArgumentException("Registration does not exist"));
+                .orElseThrow(() -> new IllegalArgumentException("L'appello fornito non esiste"));
 
         Exam exam = registration.getExam();
         Professor courseProfessor = exam.getCourse().getProfessor();
@@ -117,16 +117,18 @@ public class ExamService {
 
         int oldStatus = registration.getStatus().getId();
         if (!EDITABLE_STATUS_IDS.contains(oldStatus)) {
-            throw new IllegalArgumentException("This registration cannot be edited");
+            throw new IllegalArgumentException(
+                    "Non puoi modificare un appello " + registration.getStatus().getValue());
         }
         if (oldStatus == STATUS_NON_INSERITO_ID) {
             Status status = statusRepository.findById(STATUS_INSERITO_ID)
-                    .orElseThrow(() -> new IllegalStateException("Database does not have row '2': INSERITO"));
+                    .orElseThrow(() -> new IllegalStateException(
+                            "Database does not have row '2': INSERITO"));
             registration.setStatus(status);
         }
 
         Result result = resultRepository.findById(resultId)
-                .orElseThrow(() -> new IllegalArgumentException("Result does not exist"));
+                .orElseThrow(() -> new IllegalArgumentException("Il voto specificato non esiste"));
         registration.setResult(result);
 
         registrationRepository.save(registration);
@@ -135,7 +137,7 @@ public class ExamService {
     @Transactional
     public void publishResults(Integer professorId, Integer examId) {
         Exam exam = examRepository.findById(examId)
-                .orElseThrow(() -> new IllegalArgumentException("Exam does not exist"));
+                .orElseThrow(() -> new IllegalArgumentException("L'esame fornito non esiste"));
 
         Professor courseProfessor = exam.getCourse().getProfessor();
         if (!professorId.equals(courseProfessor.getId())) {
@@ -143,15 +145,19 @@ public class ExamService {
         }
 
         Status published = statusRepository.findById(STATUS_PUBBLICATO_ID)
-                .orElseThrow(() -> new IllegalStateException("Database does not have row '3': PUBBLICATO"));
+                .orElseThrow(() -> new IllegalStateException(
+                        "Database does not have row '3': PUBBLICATO"));
 
-        registrationRepository.publishAllInserted(examId, STATUS_INSERITO_ID, published);
+        int rowsPublished = registrationRepository.publishAllInserted(examId, STATUS_INSERITO_ID, published);
+        if (rowsPublished == 0) {
+            throw new IllegalArgumentException("Nessun appello da pubblicare");
+        }
     }
 
     @Transactional
-    public int finalizeResults(Integer professorId, Integer examId) {
+    public Integer finalizeResults(Integer professorId, Integer examId) {
         Exam exam = examRepository.findById(examId)
-                .orElseThrow(() -> new IllegalArgumentException("Exam does not exist"));
+                .orElseThrow(() -> new IllegalArgumentException("L'esame fornito non esiste"));
 
         Professor courseProfessor = exam.getCourse().getProfessor();
         if (!professorId.equals(courseProfessor.getId())) {
@@ -159,18 +165,23 @@ public class ExamService {
         }
 
         statusRepository.findById(STATUS_VERBALIZZATO_ID)
-                .orElseThrow(() -> new IllegalStateException("Database does not have row '5': VERBALIZZATO"));
+                .orElseThrow(() -> new IllegalStateException(
+                        "Database does not have row '5': VERBALIZZATO"));
 
         resultRepository.findById(RESULT_RIMANDATO_ID)
-                .orElseThrow(() -> new IllegalStateException("Database does not have row '3': RIMANDATO"));
+                .orElseThrow(() -> new IllegalStateException(
+                        "Database does not have row '3': RIMANDATO"));
 
-        int finalized = registrationRepository.finalizeAll(examId, TO_BE_VERBALIZED_STATUS_IDS, STATUS_VERBALIZZATO_ID,
+        int finalized = registrationRepository.finalizeAll(examId, TO_BE_VERBALIZED_STATUS_IDS,
+                STATUS_VERBALIZZATO_ID,
                 STATUS_RIFIUTATO_ID, RESULT_RIMANDATO_ID);
         if (finalized > 0) {
             Report report = reportService.createReport(exam);
             registrationRepository.updateReport(examId, STATUS_VERBALIZZATO_ID, report);
-        }
 
-        return finalized;
+            return report.getId();
+        } else {
+            throw new IllegalArgumentException("Nessun appello da verbalizzare");
+        }
     }
 }
