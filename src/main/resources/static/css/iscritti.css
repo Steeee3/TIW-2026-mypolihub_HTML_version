@@ -257,7 +257,7 @@
     margin-top: 14px;
 }
 
-.field .value{
+.field .value {
     width: 100%;
     padding: 10px 12px;
     border-radius: 14px;
@@ -273,10 +273,91 @@
     text-overflow: ellipsis;
 }
 
-.field .value.mono{
+.field .value.mono {
     font-variant-numeric: tabular-nums;
 }
 
-.field .value.wrap{
+.field .value.wrap {
     white-space: normal;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.exam-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.exam-actions form {
+    margin: 0;
+}
+
+@media (max-width: 720px) {
+    .header-actions {
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 8px;
+    }
+
+    .exam-actions {
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
+}
+
+.inline-form {
+    margin: 0;
+}
+
+/* Bottoni “importanti” ma coerenti col tuo stile */
+.btn-bulk {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    border-radius: 999px;
+    font-weight: 900;
+    letter-spacing: .2px;
+    white-space: nowrap;
+}
+
+/* Dot coerente (no quadretto “strano”) */
+.btn-bulk::before {
+    content: "";
+    width: 10px;
+    height: 10px;
+    border-radius: 999px;
+    background: currentColor;
+    opacity: .9;
+}
+
+/* PUBBLICA: su btn-accent il dot deve essere chiaro (altrimenti diventa “spento”) */
+.btn-publish::before {
+    background: rgba(255, 255, 255, .9);
+}
+
+/* VERBALIZZA: ghost con accento verde, pulito e leggibile */
+.btn-finalize {
+    border-color: color-mix(in srgb, #22c55e 55%, var(--border));
+    color: color-mix(in srgb, #22c55e 80%, var(--text));
+}
+
+.btn-finalize:hover {
+    background: color-mix(in srgb, #22c55e 12%, transparent);
+}
+
+@media (prefers-color-scheme: dark) {
+    .btn-finalize {
+        border-color: color-mix(in srgb, #22c55e 45%, var(--border));
+        color: color-mix(in srgb, #22c55e 75%, var(--text));
+    }
+
+    .btn-finalize:hover {
+        background: color-mix(in srgb, #22c55e 16%, transparent);
+    }
 }

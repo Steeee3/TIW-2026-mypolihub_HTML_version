@@ -96,13 +96,46 @@ public class IscrittiController {
         @RequestParam(name = "sort", required = false) String sort,
         @RequestParam(name = "sortDir", required = false) String sortDir,
         @AuthenticationPrincipal CustomUserDetails principal,
-        Model model,
         RedirectAttributes ra
     ) {
         examService.setResult(principal.getId(), registrationId, resultId);
         if (examId == null) {
             return "redirect:/home";
         }
+
+        ra.addAttribute("examId", examId);
+        ra.addAttribute("sort", sort);
+        ra.addAttribute("sortDir", sortDir);
+
+        return "redirect:/professor/exam";
+    }
+
+    @PostMapping("/professor/exam/{examId}/publish")
+    public String publishResults(
+        @PathVariable Integer examId,
+        @RequestParam(name = "sort", required = false) String sort,
+        @RequestParam(name = "sortDir", required = false) String sortDir,
+        @AuthenticationPrincipal CustomUserDetails principal,
+        RedirectAttributes ra
+    ) {
+        examService.publishResults(principal.getId(), examId);
+
+        ra.addAttribute("examId", examId);
+        ra.addAttribute("sort", sort);
+        ra.addAttribute("sortDir", sortDir);
+
+        return "redirect:/professor/exam";
+    }
+
+    @PostMapping("/professor/exam/{examId}/finalize")
+    public String finalizeResults(
+        @PathVariable Integer examId,
+        @RequestParam(name = "sort", required = false) String sort,
+        @RequestParam(name = "sortDir", required = false) String sortDir,
+        @AuthenticationPrincipal CustomUserDetails principal,
+        RedirectAttributes ra
+    ) {
+        examService.finalizeResults(principal.getId(), examId);
 
         ra.addAttribute("examId", examId);
         ra.addAttribute("sort", sort);

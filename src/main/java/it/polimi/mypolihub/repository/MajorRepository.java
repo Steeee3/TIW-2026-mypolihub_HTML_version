@@ -12,18 +12,18 @@ public interface MajorRepository extends JpaRepository<Major, Integer> {
     boolean existsByNameIgnoreCase(String name);
 
     @Query("""
-                select m
-                from Major m
-                join fetch m.degreeLevel
-                order by m.name asc
+            select m
+            from Major m
+            join fetch m.degreeLevel
+            order by m.name asc
             """)
     List<Major> findAllWithDegreeLevel();
 
     @Query(value = """
-        SELECT * 
-        FROM majors 
-        WHERE id IN (:ids)
-        ORDER BY FIELD(id, :ids)
-        """, nativeQuery = true)
+            SELECT *
+            FROM majors
+            WHERE id IN (:ids)
+            ORDER BY FIELD(id, :ids)
+            """, nativeQuery = true)
     List<Major> findAllByIdInOrder(@Param("ids") List<Integer> ids);
 }

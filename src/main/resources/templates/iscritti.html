@@ -41,8 +41,38 @@
                     </p>
                 </div>
 
-                <span class="pill" th:text="|Totali: ${registrations != null ? registrations.size() : 0}|">Totali:
-                    0</span>
+                <div class="header-actions">
+                    <span class="pill" th:text="|Totali: ${registrations != null ? registrations.size() : 0}|">Totali:
+                        0</span>
+
+                    <div class="exam-actions" th:if="${registrations != null and !registrations.isEmpty()}">
+                        <!-- PUBBLICA -->
+                        <form method="post" th:action="@{/professor/exam/{examId}/publish(examId=${examId})}">
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+                            <input type="hidden" name="sort" th:value="${sortKey}" />
+                            <input type="hidden" name="sortDir" th:value="${sortDir}" />
+
+                            <button class="btn btn-accent btn-bulk btn-publish" type="submit"
+                                title="Rende visibili agli studenti i risultati inseriti">
+                                Pubblica
+                            </button>
+                        </form>
+
+                        <!-- VERBALIZZA -->
+                        <form method="post" th:action="@{/professor/exam/{examId}/finalize(examId=${examId})}">
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+                            <input type="hidden" name="sort" th:value="${sortKey}" />
+                            <input type="hidden" name="sortDir" th:value="${sortDir}" />
+
+                            <button class="btn btn-ghost btn-bulk btn-finalize" type="submit"
+                                title="Verbalizza i risultati pubblicati">
+                                Verbalizza
+                            </button>
+                        </form>
+                    </div>
+                </div>
             </div>
 
             <div class="card-body">

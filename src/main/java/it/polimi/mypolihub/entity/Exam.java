@@ -14,13 +14,10 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(
-    name = "exams",
-    indexes = {
+@Table(name = "exams", indexes = {
         @Index(name = "FK_exams_reports", columnList = "report_id"),
         @Index(name = "FK_exams_courses", columnList = "course_id")
-    }
-)
+})
 public class Exam {
 
     @Id
@@ -34,17 +31,23 @@ public class Exam {
     @JoinColumn(name = "course_id", nullable = false)
     private Course course;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "report_id")
-    private Report report;
+    public Integer getId() {
+        return id;
+    }
 
-    public Integer getId() { return id; }
+    public LocalDateTime getDate() {
+        return date;
+    }
 
-    public LocalDateTime getDate() { return date; }
-    public void setDate(LocalDateTime date) { this.date = date; }
+    public void setDate(LocalDateTime date) {
+        this.date = date;
+    }
 
-    public Course getCourse() { return course; }
-    public void setCourse(Course course) { this.course = course; }
+    public Course getCourse() {
+        return course;
+    }
 
-    public Report getReport() { return report; }
+    public void setCourse(Course course) {
+        this.course = course;
+    }
 }

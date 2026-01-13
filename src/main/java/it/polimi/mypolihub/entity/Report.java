@@ -14,12 +14,9 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(
-    name = "reports",
-    indexes = {
+@Table(name = "reports", indexes = {
         @Index(name = "FK_reports_exams", columnList = "exam_id")
-    }
-)
+})
 public class Report {
 
     @Id
@@ -33,11 +30,23 @@ public class Report {
     @Column(name = "timestamp", nullable = false)
     private Instant timestamp;
 
-    public Integer getId() { return id; }
+    public Integer getId() {
+        return id;
+    }
 
-    public Exam getExam() { return exam; }
-    public void setExam(Exam exam) { this.exam = exam; }
+    public Exam getExam() {
+        return exam;
+    }
 
-    public Instant getTimestamp() { return timestamp; }
-    public void setTimestamp(Instant timestamp) { this.timestamp = timestamp; }
+    public void setExam(Exam exam) {
+        this.exam = exam;
+    }
+
+    public Instant getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(Instant timestamp) {
+        this.timestamp = timestamp;
+    }
 }
