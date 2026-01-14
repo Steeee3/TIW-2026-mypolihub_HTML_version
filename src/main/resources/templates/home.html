@@ -231,7 +231,7 @@
                                         <div class="exam-list" th:if="${exams != null and !exams.isEmpty()}">
                                             <a class="exam-item" th:each="e : ${exams}" th:href="${role.name() == 'PROFESSOR'} 
                                                         ? @{/professor/exam(examId=${e.id})} 
-                                                        : @{/student/esito(examId=${e.id})}">
+                                                        : @{/student/result(examId=${e.id})}">
                                                 <div class="exam-date"
                                                     th:text="${#temporals.format(e.date, 'dd/MM/yyyy')}">01/01/2026
                                                 </div>

@@ -1,6 +1,7 @@
 package it.polimi.mypolihub.repository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import org.springframework.data.domain.Sort;
@@ -59,4 +60,6 @@ public interface RegistrationRepository extends JpaRepository<Registration, Inte
             @Param("examId") Integer examId,
             @Param("verbalizedId") Integer verbalizedId,
             @Param("report") Report report);
+
+    Optional<Registration> findByStudent_IdAndExam_Id(Integer studentId, Integer examId);
 }
