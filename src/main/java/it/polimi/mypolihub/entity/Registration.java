@@ -45,8 +45,16 @@ public class Registration {
         return student;
     }
 
+    public void setStudent(Student student) {
+        this.student = student;
+    }
+
     public Exam getExam() {
         return exam;
+    }
+
+    public void setExam(Exam exam) {
+        this.exam = exam;
     }
 
     public Status getStatus() {

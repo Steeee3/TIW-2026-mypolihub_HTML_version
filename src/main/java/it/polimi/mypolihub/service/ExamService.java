@@ -13,17 +13,20 @@ import org.springframework.transaction.annotation.Transactional;
 import it.polimi.mypolihub.DTO.ExamDTO;
 import it.polimi.mypolihub.DTO.RegistrationDTO;
 import it.polimi.mypolihub.entity.Course;
+import it.polimi.mypolihub.entity.DefaultValues;
 import it.polimi.mypolihub.entity.Exam;
 import it.polimi.mypolihub.entity.Professor;
 import it.polimi.mypolihub.entity.Registration;
 import it.polimi.mypolihub.entity.Report;
 import it.polimi.mypolihub.entity.Result;
 import it.polimi.mypolihub.entity.Status;
+import it.polimi.mypolihub.entity.Student;
 import it.polimi.mypolihub.repository.CourseRepository;
 import it.polimi.mypolihub.repository.ExamRepository;
 import it.polimi.mypolihub.repository.RegistrationRepository;
 import it.polimi.mypolihub.repository.ResultRepository;
 import it.polimi.mypolihub.repository.StatusRepository;
+import it.polimi.mypolihub.repository.StudentRepository;
 
 @Service
 public class ExamService {
@@ -46,6 +49,9 @@ public class ExamService {
 	@Autowired
 	private StatusRepository statusRepository;
 
+	@Autowired
+	private StudentRepository studentRepository;
+
 	private static final int STATUS_NON_INSERITO_ID = 1;
 	private static final int STATUS_INSERITO_ID = 2;
 	private static final int STATUS_PUBBLICATO_ID = 3;
@@ -64,9 +70,9 @@ public class ExamService {
 			STATUS_PUBBLICATO_ID);
 
 	private static final Set<Integer> TO_BE_VISUALIZED_STATUS_IDS = Set.of(
-		STATUS_PUBBLICATO_ID,
-		STATUS_RIFIUTATO_ID,
-		STATUS_VERBALIZZATO_ID);
+			STATUS_PUBBLICATO_ID,
+			STATUS_RIFIUTATO_ID,
+			STATUS_VERBALIZZATO_ID);
 
 	private static final int RESULT_RIMANDATO_ID = 3;
 	private final static int RESULT_18_ID = 5;
@@ -91,6 +97,37 @@ public class ExamService {
 		return exams.stream()
 				.map(exam -> new ExamDTO(exam))
 				.toList();
+	}
+
+	@Transactional(readOnly = true)
+	public Set<Integer> getRegisteredExamIds(Integer studentId, Integer courseId) {
+		return registrationRepository.findRegisteredExamIdsByStudentAndCourse(studentId, courseId);
+	}
+
+	@Transactional
+	public void registerStudentForExam(Integer studentId, Integer examId) {
+		Student student = studentRepository.findById(studentId)
+				.orElseThrow(() -> new IllegalArgumentException("Student does not exist"));
+		Exam exam = examRepository.findById(examId)
+				.orElseThrow(() -> new IllegalArgumentException("Exam does not exist"));
+
+		Course course = exam.getCourse();
+		if (!course.getStudents().contains(student)) {
+			throw new AccessDeniedException("Devi essere iscritto al corso per iscriverti ad un appello");
+		}
+
+		Result initialDefaultResult = resultRepository.findById(DefaultValues.RESULT_VUOTO_ID)
+				.orElseThrow(() -> new IllegalStateException("Can't find default result value"));
+		Status initialDefaultStatus = statusRepository.findById(STATUS_NON_INSERITO_ID)
+				.orElseThrow(() -> new IllegalStateException("Can't find default result status"));
+
+		Registration registration = new Registration();
+		registration.setStudent(student);
+		registration.setExam(exam);
+		registration.setResult(initialDefaultResult);
+		registration.setStatus(initialDefaultStatus);
+
+		registrationRepository.save(registration);
 	}
 
 	@Transactional(readOnly = true)
@@ -198,8 +235,8 @@ public class ExamService {
 	public RegistrationDTO getResultByStudentIdAndExamId(Integer studentId, Integer examId) {
 		Registration registration = registrationRepository.findByStudent_IdAndExam_Id(studentId, examId)
 				.orElseThrow(() -> new IllegalArgumentException("Nessun iscrizione trovata per l'utente fornito"));
-		
-		Status registrationStatus = registration.getStatus();	
+
+		Status registrationStatus = registration.getStatus();
 		if (!TO_BE_VISUALIZED_STATUS_IDS.contains(registrationStatus.getId())) {
 			throw new IllegalArgumentException("Il voto non è ancora stato pubblicato");
 		}
@@ -213,7 +250,8 @@ public class ExamService {
 				.orElseThrow(() -> new IllegalArgumentException("Nessun iscrizione trovata per l'utente fornito"));
 
 		Status registrationStatus = registration.getStatus();
-		if (!TO_BE_DECLINED_STATUS_IDS.contains(registrationStatus.getId()) || registration.getResult().getId() >= RESULT_18_ID) {
+		if (!TO_BE_DECLINED_STATUS_IDS.contains(registrationStatus.getId())
+				|| registration.getResult().getId() < RESULT_18_ID) {
 			throw new IllegalArgumentException("Non puoi rifiutare questo voto");
 		}
 

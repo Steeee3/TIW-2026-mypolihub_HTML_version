@@ -18,6 +18,14 @@ public interface RegistrationRepository extends JpaRepository<Registration, Inte
     List<Registration> findByExam_Id(Integer examId, Sort sort);
     List<Registration> findByReport_Id(Integer reportId, Sort sort);
 
+    @Query("""
+                select r.exam.id
+                from Registration r
+                where r.student.id = :studentId
+                  and r.exam.course.id = :courseId
+            """)
+    Set<Integer> findRegisteredExamIdsByStudentAndCourse(Integer studentId, Integer courseId);
+
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
                 update Registration r
@@ -32,15 +40,15 @@ public interface RegistrationRepository extends JpaRepository<Registration, Inte
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query(value = """
                 update registrations r
-                set r.status_id = :verbalizedId,
-                    r.result_id = case
-                        when r.status_id = :rejectedId then :postponedId
-                        else r.result_id
-                    end
-                where r.exam_id = :examId
-                    and r.status_id in (:toBeVerbalizedIds)
-                    and r.report_id is null
-            """, nativeQuery = true)
+                set r.result_id = case
+                	when r.status_id = :rejectedId then :postponedId
+                	else r.result_id
+        		end,
+        		r.status_id = :verbalizedId
+        		where r.exam_id = :examId
+        			and r.status_id in (:toBeVerbalizedIds)
+        			and r.report_id is null
+    		""", nativeQuery = true)
     int finalizeAll(
             @Param("examId") Integer examId,
             @Param("toBeVerbalizedIds") Set<Integer> toBeVerbalizedIds,

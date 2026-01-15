@@ -505,6 +505,9 @@
 .exam-time {
   font-weight: 750;
   color: var(--muted);
+  justify-self: end;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 
 .exam-cta {
@@ -526,10 +529,6 @@
 
   .exam-date {
     grid-area: date;
-  }
-
-  .exam-time {
-    grid-area: time;
   }
 
   .exam-cta {
@@ -606,7 +605,8 @@
   font-weight: 900;
 }
 
-.note.note-danger span, .note.note-success {
+.note.note-danger span,
+.note.note-success {
   color: color-mix(in srgb, var(--text) 88%, var(--muted));
 }
 
@@ -620,4 +620,108 @@
     background: color-mix(in srgb, #88ef44 14%, var(--surface));
     border-color: color-mix(in srgb, #88ef44 45%, var(--border));
   }
+}
+
+.exam-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 12px;
+}
+
+.exam-item {
+  display: grid;
+  grid-template-columns: 140px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  text-decoration: none;
+}
+
+.exam-date,
+.exam-time {
+  align-self: center;
+  line-height: 1.1;
+}
+
+.exam-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+  padding-right: 10px;
+  flex-wrap: wrap;
+}
+
+.exam-actions,
+.exam-actions * {
+  position: relative;
+  z-index: 2;
+}
+
+.btn.btn-mini {
+  padding: 10px 12px;
+  border-radius: 12px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.pill.pill-ok {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  border-radius: 999px;
+  font-weight: 800;
+}
+
+.ok-ico {
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  position: relative;
+  flex: 0 0 18px;
+}
+
+.ok-ico::after {
+  content: "✓";
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+@media (max-width: 520px) {
+  .exam-row {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .exam-item {
+    grid-template-columns: 1fr 1fr;
+    padding: 12px 14px;
+  }
+
+  .exam-time {
+    text-align: right;
+  }
+
+  .exam-actions {
+    justify-content: flex-start;
+    padding-right: 0;
+  }
+}
+
+.btn-danger {
+  background: linear-gradient(180deg, rgba(255, 90, 90, 0.95), rgba(255, 60, 60, 0.92));
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: white;
+}
+
+.btn-danger:hover {
+  filter: brightness(1.03);
 }

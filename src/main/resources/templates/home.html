@@ -229,18 +229,39 @@
                                         </div>
 
                                         <div class="exam-list" th:if="${exams != null and !exams.isEmpty()}">
-                                            <a class="exam-item" th:each="e : ${exams}" th:href="${role.name() == 'PROFESSOR'} 
-                                                        ? @{/professor/exam(examId=${e.id})} 
-                                                        : @{/student/result(examId=${e.id})}">
-                                                <div class="exam-date"
-                                                    th:text="${#temporals.format(e.date, 'dd/MM/yyyy')}">01/01/2026
+                                            <div class="exam-row" th:each="e : ${exams}">
+                                                <a class="exam-item" th:href="${role.name() == 'PROFESSOR'} 
+                    ? @{/professor/exam(examId=${e.id})} 
+                    : @{/student/result(examId=${e.id})}">
+                                                    <div class="exam-date"
+                                                        th:text="${#temporals.format(e.date, 'dd/MM/yyyy')}">01/01/2026
+                                                    </div>
+                                                    <div class="exam-time"
+                                                        th:text="${#temporals.format(e.date, 'HH:mm')}">
+                                                        10:30</div>
+                                                </a>
+
+                                                <div class="exam-actions">
+
+                                                    <span class="pill pill-ok" th:if="${role != null and role.name() == 'STUDENT'
+                           and registeredExamIds != null
+                           and registeredExamIds.contains(e.id)}">
+                                                        <span class="ok-ico"></span> Iscritto
+                                                    </span>
+
+                                                    <form th:if="${role != null and role.name() == 'STUDENT'
+                           and (registeredExamIds == null or !registeredExamIds.contains(e.id))}" method="post"
+                                                        th:action="@{/student/exam/{examId}/register(examId=${e.id})}">
+                                                        <input type="hidden" name="courseId"
+                                                            th:value="${selectedCourseId}" />
+                                                        <input type="hidden" th:name="${_csrf.parameterName}"
+                                                            th:value="${_csrf.token}" />
+                                                        <button class="btn btn-accent btn-mini"
+                                                            type="submit">Iscriviti</button>
+                                                    </form>
+
                                                 </div>
-                                                <div class="exam-time" th:text="${#temporals.format(e.date, 'HH:mm')}">
-                                                    10:30</div>
-                                                <div class="exam-cta"
-                                                    th:text="${role.name() == 'PROFESSOR' ? 'Iscritti' : 'Esito'}">Apri
-                                                </div>
-                                            </a>
+                                            </div>
                                         </div>
 
                                         <div class="note" style="margin-top:10px;"

@@ -8,7 +8,10 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import it.polimi.mypolihub.DTO.CourseDTO;
 import it.polimi.mypolihub.DTO.ExamDTO;
@@ -42,7 +45,6 @@ public class HomeController {
         switch (role) {
             case STUDENT:
                 courses = courseService.findCoursesByStudentId(principal.getId());
-                exams = examService.getExamsForCourse(courseId);
                 break;
             case PROFESSOR:
                 courses = courseService.findCoursesByProfessorId(principal.getId());
@@ -53,9 +55,13 @@ public class HomeController {
                 courses = List.of();
         }
 
-        if (courseId != null && courses.stream().anyMatch(c -> c.getId() == courseId)) {
+        if (courseId != null && courses.stream().anyMatch(c -> c.getId().equals(courseId))) {
             selectedCourseId = courseId;
             exams = examService.getExamsForCourse(selectedCourseId);
+        }
+
+        if (selectedCourseId != null && role == Role.STUDENT) {
+            model.addAttribute("registeredExamIds", examService.getRegisteredExamIds(principal.getId(), selectedCourseId));
         }
 
         model.addAttribute("courses", courses);
@@ -66,5 +72,22 @@ public class HomeController {
         model.addAttribute("role", role);
 
         return "home";
+    }
+
+    @PostMapping("/student/exam/{examId}/register")
+    public String registerForExam(
+        @PathVariable Integer examId,
+        @RequestParam(name = "courseId", required = false) Integer courseId,
+        @AuthenticationPrincipal CustomUserDetails principal,
+        RedirectAttributes ra
+    ) {
+        examService.registerStudentForExam(principal.getId(), examId);
+
+        if (courseId != null) {
+            ra.addAttribute("courseId", courseId);
+            return "redirect:/home#course-" + courseId;
+        }
+
+        return "redirect:/home";
     }
 }
