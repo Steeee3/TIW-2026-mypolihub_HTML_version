@@ -587,12 +587,26 @@
   color: var(--text);
 }
 
+.note.note-success {
+  margin-top: 12px;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+
+  padding: 10px 14px;
+  border-radius: 16px;
+
+  background: color-mix(in srgb, #88ef44 10%, var(--surface));
+  border: 1px solid color-mix(in srgb, #88ef44 40%, var(--border));
+  color: var(--text);
+}
+
 .note.note-danger strong {
   color: color-mix(in srgb, #ef4444 75%, var(--text));
   font-weight: 900;
 }
 
-.note.note-danger span {
+.note.note-danger span, .note.note-success {
   color: color-mix(in srgb, var(--text) 88%, var(--muted));
 }
 
@@ -600,5 +614,10 @@
   .note.note-danger {
     background: color-mix(in srgb, #ef4444 14%, var(--surface));
     border-color: color-mix(in srgb, #ef4444 45%, var(--border));
+  }
+
+  .note.note-success {
+    background: color-mix(in srgb, #88ef44 14%, var(--surface));
+    border-color: color-mix(in srgb, #88ef44 45%, var(--border));
   }
 }

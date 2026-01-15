@@ -21,13 +21,10 @@ public class EsitoController {
 
 	@Autowired
 	private ExamService examService;
-
-	private final static int RESULT_18_ID = 5;
     
     @GetMapping("/student/result")
     public String result(
 			@RequestParam(name = "examId", required = false) Integer examId,
-			@RequestParam(name = "errorMessage", required = false) String errorMessage,
             @AuthenticationPrincipal CustomUserDetails principal,
             Authentication auth,
             Model model) {
@@ -41,16 +38,16 @@ public class EsitoController {
 			RegistrationDTO registration = examService.getResultByStudentIdAndExamId(principal.getId(), examId);
 
 			model.addAttribute("registration", registration);
-			model.addAttribute("notDefined", false);
+			model.addAttribute("notPublished", false);
 
-			if (registration.getResult().getId() >= RESULT_18_ID) {
+			if (registration.canBeDeclined()) {
 				model.addAttribute("canDecline", true);
 			} else {
 				model.addAttribute("canDecline", false);
 			}
 		} catch (IllegalArgumentException e) {
 			model.addAttribute("errorMessage", e.getMessage());
-			model.addAttribute("notDefined", true);
+			model.addAttribute("notPublished", true);
 		}
 
 		model.addAttribute("examId", examId);

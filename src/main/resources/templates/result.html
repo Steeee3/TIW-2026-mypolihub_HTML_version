@@ -33,12 +33,12 @@
             </div>
         </header>
 
-        <div class="note note-danger" th:if="${errorMessage != null and !#strings.isEmpty(errorMessage)}">
+        <div class="note note-danger" th:if="${errorMessage != null and !#strings.isEmpty(errorMessage) and notPublished == false}">
             <strong>Errore:</strong>&nbsp;<span th:text="${errorMessage}">—</span>
         </div>
 
-        <div class="note" th:if="${successMessage != null and !#strings.isEmpty(successMessage)}">
-            <strong>OK:</strong>&nbsp;<span th:text="${successMessage}">—</span>
+        <div class="note note-success" th:if="${successMessage != null and !#strings.isEmpty(successMessage)}">
+            <span th:text="${successMessage}">—</span>
         </div>
 
         <section class="card" style="margin-top:18px;">
@@ -55,12 +55,12 @@
 
             <div class="card-body">
 
-                <div class="note" th:if="${notDefined == true}">
-                    <strong>Voto non ancora definito.</strong>
+                <div class="note" th:if="${notPublished == true}">
+                    <strong th:text="${errorMessage}">Voto non ancora definito.</strong>
                     Il docente non ha ancora pubblicato il risultato per questo appello.
                 </div>
 
-                <div th:if="${notDefined != true and registration != null}">
+                <div th:if="${notPublished != true and registration != null}">
 
                     <div class="grid" style="grid-template-columns: 1.1fr .9fr;">
                         <div class="card mini">
@@ -159,7 +159,8 @@
                                             <td class="actions-cell" style="text-align:right;">
                                                 <form method="post"
                                                     th:if="${canDecline == true and (successMessage == null or #strings.isEmpty(successMessage))}"
-                                                    th:action="@{/student/result/{examId}/decline(examId=${examId})}">
+                                                    th:action="@{/student/result/{examId}/decline(examId=${examId})}"
+                                                    onsubmit="return confirm('Sei sicuro di voler rifiutare il voto? Questa azione non è annullabile.');">
                                                     <input type="hidden" th:name="${_csrf.parameterName}"
                                                         th:value="${_csrf.token}" />
                                                     <button class="btn btn-danger" type="submit">RIFIUTA</button>

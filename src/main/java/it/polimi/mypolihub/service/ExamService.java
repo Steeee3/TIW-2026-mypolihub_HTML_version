@@ -69,6 +69,7 @@ public class ExamService {
 		STATUS_VERBALIZZATO_ID);
 
 	private static final int RESULT_RIMANDATO_ID = 3;
+	private final static int RESULT_18_ID = 5;
 
 	@Transactional
 	public void addExamCall(Integer examId, LocalDateTime date) {
@@ -212,7 +213,7 @@ public class ExamService {
 				.orElseThrow(() -> new IllegalArgumentException("Nessun iscrizione trovata per l'utente fornito"));
 
 		Status registrationStatus = registration.getStatus();
-		if (!TO_BE_DECLINED_STATUS_IDS.contains(registrationStatus.getId())) {
+		if (!TO_BE_DECLINED_STATUS_IDS.contains(registrationStatus.getId()) || registration.getResult().getId() >= RESULT_18_ID) {
 			throw new IllegalArgumentException("Non puoi rifiutare questo voto");
 		}
 
