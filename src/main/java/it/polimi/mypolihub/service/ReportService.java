@@ -64,7 +64,7 @@ public class ReportService {
 
     @Transactional(readOnly = true)
     public List<ReportDTO> findReportsByProfessorId(Integer professorId) {
-        return reportRepository.findAllByProfessorSorted(professorId).stream()
+        return reportRepository.findAllByProfessor_IdSorted(professorId).stream()
             .map(r -> new ReportDTO(r, List.of()))
             .toList();
     }

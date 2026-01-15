@@ -37,13 +37,12 @@
             </div>
         </header>
 
-        <!-- opzionale: error banner se lo usi -->
         <div class="note note-danger" th:if="${errorMessage != null and !#strings.isEmpty(errorMessage)}">
-            <strong>Errore:</strong>&nbsp;<span th:text="${errorMessage}">Messaggio di errore…</span>
+            <strong>Errore:</strong>&nbsp;<span th:text="${errorMessage}">qualcosa è andato storto</span>
         </div>
 
         <!-- INFO VERBALE -->
-        <section class="card" style="margin-top:18px;">
+        <section class="card" style="margin-top:18px;" th:if="${report != null}">
             <div class="card-header">
                 <div>
                     <h2 class="card-title" th:text="|Verbale #${reportId}|">Verbale #1</h2>
@@ -63,7 +62,6 @@
                         Creato: —
                     </span>
 
-                    <!-- opzionale: torna all’appello -->
                     <a class="btn btn-ghost" th:if="${examId != null}" th:href="@{/professor/exam(examId=${examId})}">
                         Torna all’appello
                     </a>
@@ -130,8 +128,8 @@
             </div>
         </section>
 
-        <!-- TABELLA (identica a iscritti, ma senza Status e senza Modifica) -->
-        <section class="card" style="margin-top:18px;">
+        <!-- TABELLA -->
+        <section class="card" style="margin-top:18px;" th:if="${report != null}">
             <div class="card-header">
                 <div>
                     <h2 class="card-title">Studenti verbalizzati</h2>

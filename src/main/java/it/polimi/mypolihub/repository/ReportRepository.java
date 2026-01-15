@@ -17,5 +17,5 @@ public interface ReportRepository extends JpaRepository<Report, Integer> {
                 where c.professor.id = :professorId
                 order by c.name asc, e.date asc
             """)
-    List<Report> findAllByProfessorSorted(@Param("professorId") Integer professorId);
+    List<Report> findAllByProfessor_IdSorted(@Param("professorId") Integer professorId);
 }

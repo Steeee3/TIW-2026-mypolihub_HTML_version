@@ -81,15 +81,21 @@ public class VerbaliController {
             sortDir = DEFAULT_DIR;
         }
 
-        ReportDTO report = reportService.getReportByIdSortedBy(principal.getId(), reportId, sortKey, sortDir);
+        ReportDTO report = null;
+        try {
+            report = reportService.getReportByIdSortedBy(principal.getId(), reportId, sortKey, sortDir);
+
+            model.addAttribute("report", report);
+
+            model.addAttribute("examId", report.getExam().getId());
+            model.addAttribute("registrations", report.getRegistrations());
+
+            model.addAttribute("verbalizedCount", report.getRegistrations().size());
+        } catch (IllegalArgumentException e) {
+            model.addAttribute("errorMessage", e.getMessage());
+        }
 
         model.addAttribute("reportId", reportId);
-        model.addAttribute("report", report);
-
-        model.addAttribute("examId", report.getExam().getId());
-        model.addAttribute("registrations", report.getRegistrations());
-
-        model.addAttribute("verbalizedCount", report.getRegistrations().size());
 
         model.addAttribute("sortKey", sort);
         model.addAttribute("sortDir", sortDir);
