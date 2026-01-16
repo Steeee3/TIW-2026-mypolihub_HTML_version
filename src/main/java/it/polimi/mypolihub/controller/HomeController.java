@@ -1,6 +1,7 @@
 package it.polimi.mypolihub.controller;
 
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -38,7 +39,6 @@ public class HomeController {
 
         List<CourseDTO> courses;
         List<ExamDTO> exams = List.of();
-        Integer selectedCourseId = null;
 
         Role role = Role.from(auth);
 
@@ -52,26 +52,47 @@ public class HomeController {
             case ADMIN:
                 return "redirect:/admin/panel";
             default:
-                courses = List.of();
+                throw new IllegalStateException("Ruolo " + role + " non supportato");
         }
 
-        if (courseId != null && courses.stream().anyMatch(c -> c.getId().equals(courseId))) {
-            selectedCourseId = courseId;
-            exams = examService.getExamsForCourse(selectedCourseId);
+        if (subscribedToRequestedCourse(courseId, courses)) {
+            exams = examService.getExamsForCourse(courseId);
         }
 
-        if (selectedCourseId != null && role == Role.STUDENT) {
-            model.addAttribute("registeredExamIds", examService.getRegisteredExamIds(principal.getId(), selectedCourseId));
+        fillModel(principal, role, courseId, courses, exams, model);
+
+        return "home";
+    }
+
+    private boolean subscribedToRequestedCourse(Integer courseId, List<CourseDTO> courses) {
+        if (courseId == null || courses.isEmpty()) {
+            return false;
+        }
+
+        return courses.stream()
+            .anyMatch(c -> c.getId().equals(courseId));
+    }
+
+    private void fillModel(CustomUserDetails principal, Role role, Integer courseId, List<CourseDTO> courses, List<ExamDTO> exams, Model model) {
+        if (studentRequestedExams(courseId, role)) {
+            Set<Integer> examsWhichStudentRegistered = examService.getRegisteredExamIds(principal.getId(), courseId);
+
+            model.addAttribute("registeredExamIds", examsWhichStudentRegistered);
         }
 
         model.addAttribute("courses", courses);
-        model.addAttribute("selectedCourseId", selectedCourseId);
+        model.addAttribute("selectedCourseId", courseId);
         model.addAttribute("exams", exams);
         
         model.addAttribute("helloName", principal.getName());
         model.addAttribute("role", role);
+    }
 
-        return "home";
+    private boolean studentRequestedExams(Integer courseId, Role role) {
+        if (courseId == null || role != Role.STUDENT) {
+            return false;
+        }
+        return true;
     }
 
     @PostMapping("/student/exam/{examId}/register")

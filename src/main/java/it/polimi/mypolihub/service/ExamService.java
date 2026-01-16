@@ -15,7 +15,6 @@ import it.polimi.mypolihub.DTO.RegistrationDTO;
 import it.polimi.mypolihub.entity.Course;
 import it.polimi.mypolihub.entity.DefaultValues;
 import it.polimi.mypolihub.entity.Exam;
-import it.polimi.mypolihub.entity.Professor;
 import it.polimi.mypolihub.entity.Registration;
 import it.polimi.mypolihub.entity.Report;
 import it.polimi.mypolihub.entity.Result;
@@ -52,38 +51,31 @@ public class ExamService {
 	@Autowired
 	private StudentRepository studentRepository;
 
-	private static final int STATUS_NON_INSERITO_ID = 1;
-	private static final int STATUS_INSERITO_ID = 2;
-	private static final int STATUS_PUBBLICATO_ID = 3;
-	private static final int STATUS_RIFIUTATO_ID = 4;
-	private static final int STATUS_VERBALIZZATO_ID = 5;
-
 	private static final Set<Integer> EDITABLE_STATUS_IDS = Set.of(
-			STATUS_NON_INSERITO_ID,
-			STATUS_INSERITO_ID);
+			DefaultValues.STATUS_NON_INSERITO_ID,
+			DefaultValues.STATUS_INSERITO_ID);
 
 	private static final Set<Integer> TO_BE_VERBALIZED_STATUS_IDS = Set.of(
-			STATUS_PUBBLICATO_ID,
-			STATUS_RIFIUTATO_ID);
+			DefaultValues.STATUS_PUBBLICATO_ID,
+			DefaultValues.STATUS_RIFIUTATO_ID);
 
 	private static final Set<Integer> TO_BE_DECLINED_STATUS_IDS = Set.of(
-			STATUS_PUBBLICATO_ID);
+			DefaultValues.STATUS_PUBBLICATO_ID);
 
 	private static final Set<Integer> TO_BE_VISUALIZED_STATUS_IDS = Set.of(
-			STATUS_PUBBLICATO_ID,
-			STATUS_RIFIUTATO_ID,
-			STATUS_VERBALIZZATO_ID);
+			DefaultValues.STATUS_PUBBLICATO_ID,
+			DefaultValues.STATUS_RIFIUTATO_ID,
+			DefaultValues.STATUS_VERBALIZZATO_ID);
 
-	private static final int RESULT_RIMANDATO_ID = 3;
-	private final static int RESULT_18_ID = 5;
+	// -----------------------------
+	// Exam calls
+	// -----------------------------
 
 	@Transactional
-	public void addExamCall(Integer examId, LocalDateTime date) {
+	public void addExamCall(Integer courseId, LocalDateTime date) {
+		Course course = getCourse(courseId);
+
 		Exam exam = new Exam();
-
-		Course course = courseRepository.findById(examId)
-				.orElseThrow(() -> new IllegalArgumentException("Course does not exists"));
-
 		exam.setCourse(course);
 		exam.setDate(date);
 
@@ -92,12 +84,14 @@ public class ExamService {
 
 	@Transactional(readOnly = true)
 	public List<ExamDTO> getExamsForCourse(Integer courseId) {
-		List<Exam> exams = examRepository.findAllByCourse_IdOrderByDateDesc(courseId);
-
-		return exams.stream()
-				.map(exam -> new ExamDTO(exam))
+		return examRepository.findAllByCourse_IdOrderByDateDesc(courseId).stream()
+				.map(ExamDTO::new)
 				.toList();
 	}
+
+	// -----------------------------
+	// Student registrations
+	// -----------------------------
 
 	@Transactional(readOnly = true)
 	public Set<Integer> getRegisteredExamIds(Integer studentId, Integer courseId) {
@@ -106,160 +100,214 @@ public class ExamService {
 
 	@Transactional
 	public void registerStudentForExam(Integer studentId, Integer examId) {
-		Student student = studentRepository.findById(studentId)
-				.orElseThrow(() -> new IllegalArgumentException("Student does not exist"));
-		Exam exam = examRepository.findById(examId)
-				.orElseThrow(() -> new IllegalArgumentException("Exam does not exist"));
+		Student student = getStudent(studentId);
+		Exam exam = getExam(examId);
 
-		Course course = exam.getCourse();
-		if (!course.getStudents().contains(student)) {
-			throw new AccessDeniedException("Devi essere iscritto al corso per iscriverti ad un appello");
-		}
-
-		Result initialDefaultResult = resultRepository.findById(DefaultValues.RESULT_VUOTO_ID)
-				.orElseThrow(() -> new IllegalStateException("Can't find default result value"));
-		Status initialDefaultStatus = statusRepository.findById(STATUS_NON_INSERITO_ID)
-				.orElseThrow(() -> new IllegalStateException("Can't find default result status"));
+		assertStudentEnrolledInExamCourse(studentId, examId);
+		assertStudentNotAlreadyRegisteredForExamCall(studentId, examId);
 
 		Registration registration = new Registration();
 		registration.setStudent(student);
 		registration.setExam(exam);
-		registration.setResult(initialDefaultResult);
-		registration.setStatus(initialDefaultStatus);
+		registration.setResult(getResult(DefaultValues.RESULT_VUOTO_ID));
+		registration.setStatus(getStatus(DefaultValues.STATUS_NON_INSERITO_ID));
 
 		registrationRepository.save(registration);
 	}
 
 	@Transactional(readOnly = true)
-	public List<RegistrationDTO> getStudentsByExamIdSortedBy(Integer professorId, Integer examId, String sortBy,
+	public RegistrationDTO getResultByStudentIdAndExamId(Integer studentId, Integer examId) {
+		Registration registration = getRegistrationByStudentId(studentId, examId);
+		assertVisibleToStudent(registration);
+		return new RegistrationDTO(registration);
+	}
+
+	@Transactional
+	public void declineExamResult(Integer studentId, Integer examId) {
+		Registration registration = getRegistrationByStudentId(studentId, examId);
+
+		assertDeclinable(registration);
+
+		registration.setStatus(getStatus(DefaultValues.STATUS_RIFIUTATO_ID));
+		// @Transactional => dirty checking
+	}
+
+	// -----------------------------
+	// Professor operations
+	// -----------------------------
+
+	@Transactional(readOnly = true)
+	public List<RegistrationDTO> getStudentsByExamIdSortedBy(
+			Integer professorId,
+			Integer examId,
+			String sortBy,
 			String sortDir) {
-		Sort.Direction dir = "desc".equalsIgnoreCase(sortDir) ? Sort.Direction.DESC : Sort.Direction.ASC;
-		Sort sort = Sort.by(dir, sortBy);
 
-		Exam exam = examRepository.findById(examId)
-				.orElseThrow(() -> new IllegalArgumentException("Exam does not exist"));
-		Professor courseProfessor = exam.getCourse().getProfessor();
-		if (!professorId.equals(courseProfessor.getId())) {
-			throw new AccessDeniedException("Access denied");
-		}
+		assertProfessorOwnsExam(professorId, examId);
 
-		List<Registration> registrations = registrationRepository.findByExam_Id(examId, sort);
+		Sort sort = toSort(sortBy, sortDir);
 
-		return registrations.stream()
-				.map(r -> new RegistrationDTO(r))
+		return registrationRepository.findByExam_Id(examId, sort).stream()
+				.map(RegistrationDTO::new)
 				.toList();
 	}
 
 	@Transactional
 	public void setResult(Integer professorId, Integer registrationId, Integer resultId) {
-		Registration registration = registrationRepository.findById(registrationId)
-				.orElseThrow(() -> new IllegalArgumentException("L'appello fornito non esiste"));
+		Registration registration = getRegistration(registrationId);
 
-		Exam exam = registration.getExam();
-		Professor courseProfessor = exam.getCourse().getProfessor();
-		if (!professorId.equals(courseProfessor.getId())) {
-			throw new AccessDeniedException("Assicurati di essere il docente associato al corso.");
-		}
+		assertProfessorOwnsRegistration(professorId, registrationId);
+		assertEditable(registration);
 
-		int oldStatus = registration.getStatus().getId();
-		if (!EDITABLE_STATUS_IDS.contains(oldStatus)) {
-			throw new IllegalArgumentException(
-					"Non puoi modificare un appello " + registration.getStatus().getValue());
-		}
-		if (oldStatus == STATUS_NON_INSERITO_ID) {
-			Status status = statusRepository.findById(STATUS_INSERITO_ID)
-					.orElseThrow(() -> new IllegalStateException(
-							"Database does not have row '2': INSERITO"));
-			registration.setStatus(status);
-		}
+		promoteStatusToInsertedIfNeeded(registration);
 
-		Result result = resultRepository.findById(resultId)
-				.orElseThrow(() -> new IllegalArgumentException("Il voto specificato non esiste"));
-		registration.setResult(result);
-
-		registrationRepository.save(registration);
+		registration.setResult(getResult(resultId));
 	}
 
 	@Transactional
 	public void publishResults(Integer professorId, Integer examId) {
-		Exam exam = examRepository.findById(examId)
-				.orElseThrow(() -> new IllegalArgumentException("L'esame fornito non esiste"));
+		assertProfessorOwnsExam(professorId, examId);
 
-		Professor courseProfessor = exam.getCourse().getProfessor();
-		if (!professorId.equals(courseProfessor.getId())) {
-			throw new AccessDeniedException("Assicurati di essere il docente associato al corso.");
-		}
+		Status published = getStatus(DefaultValues.STATUS_PUBBLICATO_ID);
 
-		Status published = statusRepository.findById(STATUS_PUBBLICATO_ID)
-				.orElseThrow(() -> new IllegalStateException(
-						"Database does not have row '3': PUBBLICATO"));
-
-		int rowsPublished = registrationRepository.publishAllInserted(examId, STATUS_INSERITO_ID, published);
-		if (rowsPublished == 0) {
+		int rows = registrationRepository.publishAllInserted(examId, DefaultValues.STATUS_INSERITO_ID, published);
+		if (rows == 0) {
 			throw new IllegalArgumentException("Nessun appello da pubblicare");
 		}
 	}
 
 	@Transactional
 	public Integer finalizeResults(Integer professorId, Integer examId) {
-		Exam exam = examRepository.findById(examId)
-				.orElseThrow(() -> new IllegalArgumentException("L'esame fornito non esiste"));
+		assertProfessorOwnsExam(professorId, examId);
 
-		Professor courseProfessor = exam.getCourse().getProfessor();
-		if (!professorId.equals(courseProfessor.getId())) {
-			throw new AccessDeniedException("Assicurati di essere il docente associato al corso.");
-		}
+		getStatus(DefaultValues.STATUS_VERBALIZZATO_ID);
+		getResult(DefaultValues.RESULT_RIMANDATO_ID);
 
-		statusRepository.findById(STATUS_VERBALIZZATO_ID)
-				.orElseThrow(() -> new IllegalStateException(
-						"Database does not have row '5': VERBALIZZATO"));
+		int finalized = registrationRepository.finalizeAll(
+				examId,
+				TO_BE_VERBALIZED_STATUS_IDS,
+				DefaultValues.STATUS_VERBALIZZATO_ID,
+				DefaultValues.STATUS_RIFIUTATO_ID,
+				DefaultValues.RESULT_RIMANDATO_ID);
 
-		resultRepository.findById(RESULT_RIMANDATO_ID)
-				.orElseThrow(() -> new IllegalStateException(
-						"Database does not have row '3': RIMANDATO"));
-
-		int finalized = registrationRepository.finalizeAll(examId, TO_BE_VERBALIZED_STATUS_IDS,
-				STATUS_VERBALIZZATO_ID,
-				STATUS_RIFIUTATO_ID, RESULT_RIMANDATO_ID);
-		if (finalized > 0) {
-			Report report = reportService.createReport(exam);
-			registrationRepository.updateReport(examId, STATUS_VERBALIZZATO_ID, report);
-
-			return report.getId();
-		} else {
+		if (finalized == 0) {
 			throw new IllegalArgumentException("Nessun appello da verbalizzare");
 		}
+
+		Report report = reportService.createReport(getExam(examId));
+
+		registrationRepository.updateReport(examId, DefaultValues.STATUS_VERBALIZZATO_ID, report);
+
+		return report.getId();
 	}
 
-	@Transactional(readOnly = true)
-	public RegistrationDTO getResultByStudentIdAndExamId(Integer studentId, Integer examId) {
-		Registration registration = registrationRepository.findByStudent_IdAndExam_Id(studentId, examId)
-				.orElseThrow(() -> new IllegalArgumentException("Nessun iscrizione trovata per l'utente fornito"));
+	// -----------------------------
+	// Helpers: getters
+	// -----------------------------
 
-		Status registrationStatus = registration.getStatus();
-		if (!TO_BE_VISUALIZED_STATUS_IDS.contains(registrationStatus.getId())) {
+	private Course getCourse(Integer courseId) {
+		return courseRepository.findById(courseId)
+				.orElseThrow(() -> new IllegalArgumentException("Il corso fornito non esiste"));
+	}
+
+	private Student getStudent(Integer studentId) {
+		return studentRepository.findById(studentId)
+				.orElseThrow(() -> new IllegalArgumentException("Lo studente fornito non esiste"));
+	}
+
+	private Exam getExam(Integer examId) {
+		return examRepository.findById(examId)
+				.orElseThrow(() -> new IllegalArgumentException("L'esame specificato non esiste"));
+	}
+
+	private Registration getRegistration(Integer registrationId) {
+		return registrationRepository.findById(registrationId)
+				.orElseThrow(() -> new IllegalArgumentException("L'appello fornito non esiste"));
+	}
+
+	private Registration getRegistrationByStudentId(Integer studentId, Integer examId) {
+		return registrationRepository.findByStudent_IdAndExam_Id(studentId, examId)
+				.orElseThrow(() -> new IllegalArgumentException("Nessuna iscrizione trovata per l'utente fornito"));
+	}
+
+	private Status getStatus(int statusId) {
+		return statusRepository.findById(statusId)
+				.orElseThrow(() -> new IllegalStateException("Database missing status id=" + statusId));
+	}
+
+	private Result getResult(Integer resultId) {
+		return resultRepository.findById(resultId)
+				.orElseThrow(() -> new IllegalArgumentException("Il voto specificato non esiste"));
+	}
+
+	// -----------------------------
+	// Helpers: sort / access control
+	// -----------------------------
+
+	private Sort toSort(String sortBy, String sortDir) {
+		Sort.Direction direction = "desc".equalsIgnoreCase(sortDir)
+				? Sort.Direction.DESC
+				: Sort.Direction.ASC;
+
+		return Sort.by(direction, sortBy);
+	}
+
+	private void assertProfessorOwnsExam(Integer professorId, Integer examId) {
+		if (!examRepository.existsByIdAndCourse_Professor_Id(examId, professorId)) {
+			throw new AccessDeniedException("Assicurati di essere il docente associato al corso");
+		}
+	}
+
+	private void assertProfessorOwnsRegistration(Integer professorId, Integer registrationId) {
+		if (!registrationRepository.existsByIdAndExam_Course_Professor_Id(registrationId, professorId)) {
+			throw new AccessDeniedException("Assicurati di essere il docente associato al corso");
+		}
+	}
+
+	private void assertStudentEnrolledInExamCourse(Integer studentId, Integer examId) {
+		if (!examRepository.existsByIdAndCourse_Students_Id(examId, studentId)) {
+			throw new AccessDeniedException("Devi essere iscritto al corso per iscriverti ad un appello");
+		}
+	}
+
+	private void assertStudentNotAlreadyRegisteredForExamCall(Integer studentId, Integer examId) {
+		if (registrationRepository.existsByStudent_IdAndExam_Id(studentId, examId)) {
+			throw new IllegalArgumentException("Sei già iscritto a questo appello");
+		}
+	}
+
+	// -----------------------------
+	// Helpers: domain rules
+	// -----------------------------
+
+	private void assertEditable(Registration registration) {
+		int statusId = registration.getStatus().getId();
+		if (!EDITABLE_STATUS_IDS.contains(statusId)) {
+			throw new IllegalArgumentException("Non puoi modificare un appello " + registration.getStatus().getValue());
+		}
+	}
+
+	private void promoteStatusToInsertedIfNeeded(Registration registration) {
+		if (registration.getStatus().getId() != DefaultValues.STATUS_NON_INSERITO_ID) {
+			return;
+		}
+		registration.setStatus(getStatus(DefaultValues.STATUS_INSERITO_ID));
+	}
+
+	private void assertVisibleToStudent(Registration registration) {
+		if (!TO_BE_VISUALIZED_STATUS_IDS.contains(registration.getStatus().getId())) {
 			throw new IllegalArgumentException("Il voto non è ancora stato pubblicato");
 		}
-
-		return new RegistrationDTO(registration);
 	}
 
-	@Transactional
-	public void declineExamResult(Integer studentId, Integer examId) {
-		Registration registration = registrationRepository.findByStudent_IdAndExam_Id(studentId, examId)
-				.orElseThrow(() -> new IllegalArgumentException("Nessun iscrizione trovata per l'utente fornito"));
-
-		Status registrationStatus = registration.getStatus();
-		if (!TO_BE_DECLINED_STATUS_IDS.contains(registrationStatus.getId())
-				|| registration.getResult().getId() < RESULT_18_ID) {
+	private void assertDeclinable(Registration registration) {
+		if (!TO_BE_DECLINED_STATUS_IDS.contains(registration.getStatus().getId())) {
 			throw new IllegalArgumentException("Non puoi rifiutare questo voto");
 		}
 
-		Status declined = statusRepository.findById(STATUS_RIFIUTATO_ID)
-				.orElseThrow(() -> new IllegalStateException(
-						"Database does not have row '4': RIFIUTATO"));
-
-		registration.setStatus(declined);
-		registrationRepository.save(registration);
+		Integer resultId = registration.getResult() == null ? null : registration.getResult().getId();
+		if (resultId == null || resultId < DefaultValues.RESULT_18_ID) {
+			throw new IllegalArgumentException("Non puoi rifiutare questo voto");
+		}
 	}
 }

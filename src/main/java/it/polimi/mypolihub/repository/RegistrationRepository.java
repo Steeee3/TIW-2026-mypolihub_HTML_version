@@ -15,6 +15,8 @@ import it.polimi.mypolihub.entity.Report;
 import it.polimi.mypolihub.entity.Status;
 
 public interface RegistrationRepository extends JpaRepository<Registration, Integer> {
+	boolean existsByIdAndExam_Course_Professor_Id(Integer registrationId, Integer professorId);
+	boolean existsByStudent_IdAndExam_Id(Integer studentId, Integer examId);
     List<Registration> findByExam_Id(Integer examId, Sort sort);
     List<Registration> findByReport_Id(Integer reportId, Sort sort);
 

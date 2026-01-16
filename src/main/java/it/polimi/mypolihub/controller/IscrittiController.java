@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import it.polimi.mypolihub.DTO.RegistrationDTO;
+import it.polimi.mypolihub.DTO.ResultDTO;
+import it.polimi.mypolihub.entity.DefaultValues;
 import it.polimi.mypolihub.entity.Role;
 import it.polimi.mypolihub.security.CustomUserDetails;
 import it.polimi.mypolihub.service.ExamService;
@@ -30,6 +32,9 @@ public class IscrittiController {
     @Autowired
     private ResultService resultService;
 
+    private record SortKey(String ui, String jpa) {
+    }
+
     private static final String DEFAULT_SORT = "student.number";
     private static final String DEFAULT_DIR = "asc";
 
@@ -40,7 +45,7 @@ public class IscrittiController {
             "student.email",
             "result",
             "status");
-    private final Map<String, String> SORT_MAPPING = Map.of(
+    private static final Map<String, String> SORT_MAPPING = Map.of(
             "student.surname", "student.user.surname",
             "student.name", "student.user.name",
             "student.email", "student.user.email",
@@ -53,7 +58,6 @@ public class IscrittiController {
             @RequestParam(name = "sort", required = false) String sort,
             @RequestParam(name = "sortDir", required = false) String sortDir,
             @RequestParam(name = "editStudentNumber", required = false) Integer editStudentNumber,
-            @RequestParam(name = "errorMessage", required = false) String errorMessage,
             @AuthenticationPrincipal CustomUserDetails principal,
             Authentication auth,
             Model model) {
@@ -63,33 +67,63 @@ public class IscrittiController {
             return "redirect:/home";
         }
 
-        sort = (sort == null || sort.isBlank()) ? DEFAULT_SORT : sort;
-        if (!ALLOWED_SORTS.contains(sort)) {
-            sort = DEFAULT_SORT;
-        }
-        String sortKey = SORT_MAPPING.getOrDefault(sort, sort);
-
-        if (sortDir == null || sortDir.isBlank()) {
-            sortDir = DEFAULT_DIR;
-        }
+        SortKey sortKey = getValidSortKeyFrom(sort);
+        sortDir = getvalidSortDirFrom(sortDir);
 
         List<RegistrationDTO> registrations = examService.getStudentsByExamIdSortedBy(principal.getId(), examId,
-                sortKey, sortDir);
+                sortKey.jpa, sortDir);
+
+        fillModel(role, principal, examId, sortDir, sortKey.ui, registrations, editStudentNumber, model);
+
+        return "iscritti";
+    }
+
+    private SortKey getValidSortKeyFrom(String sort) {
+        String ui = (sort == null || sort.isBlank()) ? DEFAULT_SORT : sort;
+        if (!ALLOWED_SORTS.contains(ui)) {
+            ui = DEFAULT_SORT;
+        }
+        String jpa = SORT_MAPPING.getOrDefault(ui, ui);
+        
+        return new SortKey(ui, jpa);
+    }
+
+    private String getvalidSortDirFrom(String sortDir) {
+        if (sortDir == null || sortDir.isBlank()) {
+            return DEFAULT_DIR;
+        }
+        return sortDir;
+    }
+
+    private void fillModel(
+            Role role,
+            CustomUserDetails principal,
+            Integer examId,
+            String sortDir,
+            String sortKey,
+            List<RegistrationDTO> registrations,
+            Integer editedStudentNumber,
+            Model model) {
+        List<ResultDTO> results = getAllResults();
 
         model.addAttribute("examId", examId);
         model.addAttribute("sortDir", sortDir);
-        model.addAttribute("sortKey", sort);
+        model.addAttribute("sortKey", sortKey);
 
         model.addAttribute("registrations", registrations);
-        model.addAttribute("results", resultService.getAllResults());
-        model.addAttribute("editStudentNumber", editStudentNumber);
+        model.addAttribute("results", results);
+        model.addAttribute("editStudentNumber", editedStudentNumber);
 
         model.addAttribute("helloName", principal.getName());
         model.addAttribute("role", role);
+    }
 
-        model.addAttribute("errorMessage", errorMessage);
+    private List<ResultDTO> getAllResults() {
+        List<ResultDTO> results = resultService.getAllResults();
 
-        return "iscritti";
+        return results.stream()
+                .filter(r -> r.getId() != DefaultValues.RESULT_VUOTO_ID)
+                .toList();
     }
 
     @PostMapping("/professor/registrations/{registrationId}/result")
@@ -104,17 +138,21 @@ public class IscrittiController {
         try {
             examService.setResult(principal.getId(), registrationId, resultId);
         } catch (IllegalArgumentException e) {
-            ra.addAttribute("errorMessage", e.getMessage());
+            ra.addFlashAttribute("errorMessage", e.getMessage());
         }
         if (examId == null) {
             return "redirect:/home";
         }
 
+        addRedirectAttributes(examId, sort, sortDir, ra);
+
+        return "redirect:/professor/exam";
+    }
+
+    private void addRedirectAttributes(Integer examId, String sort, String sortDir, RedirectAttributes ra) {
         ra.addAttribute("examId", examId);
         ra.addAttribute("sort", sort);
         ra.addAttribute("sortDir", sortDir);
-
-        return "redirect:/professor/exam";
     }
 
     @PostMapping("/professor/exam/{examId}/publish")
@@ -127,12 +165,10 @@ public class IscrittiController {
         try {
             examService.publishResults(principal.getId(), examId);
         } catch (IllegalArgumentException e) {
-            ra.addAttribute("errorMessage", e.getMessage());
+            ra.addFlashAttribute("errorMessage", e.getMessage());
         }
 
-        ra.addAttribute("examId", examId);
-        ra.addAttribute("sort", sort);
-        ra.addAttribute("sortDir", sortDir);
+        addRedirectAttributes(examId, sort, sortDir, ra);
 
         return "redirect:/professor/exam";
     }
@@ -150,12 +186,10 @@ public class IscrittiController {
             ra.addAttribute("reportId", reportId);
             return "redirect:/professor/reports";
         } catch (IllegalArgumentException e) {
-            ra.addAttribute("errorMessage", e.getMessage());
+            ra.addFlashAttribute("errorMessage", e.getMessage());
         }
 
-        ra.addAttribute("examId", examId);
-        ra.addAttribute("sort", sort);
-        ra.addAttribute("sortDir", sortDir);
+        addRedirectAttributes(examId, sort, sortDir, ra);
 
         return "redirect:/professor/exam";
     }
