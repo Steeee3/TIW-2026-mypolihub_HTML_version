@@ -45,27 +45,10 @@
                     <span th:text="|Dashboard ${role != null ? role : ''}|">Dashboard</span>
                 </div>
 
-                <h2 class="hero-title">I tuoi corsi, a colpo d’occhio.</h2>
+                <h2 class="hero-title">I tuoi corsi, a colpo d'occhio.</h2>
                 <p class="hero-sub">
-                    Cerca, ordina e consulta rapidamente le informazioni principali in stile PoliMi/WeBeep.
+                    Panoramica dei tuoi corsi, con accesso immediato ad appelli e informazioni essenziali.
                 </p>
-
-                <div class="hero-actions">
-                    <div class="search">
-                        <span class="search-ico"></span>
-                        <input id="courseSearch" type="text" placeholder="Cerca corso, docente o major…"
-                            autocomplete="off" />
-                    </div>
-
-                    <div class="select-wrap">
-                        <select id="courseSort" aria-label="Ordina corsi">
-                            <option value="nameAsc">Ordina: Nome (A→Z)</option>
-                            <option value="nameDesc" selected>Ordina: Nome (Z→A)</option>
-                            <option value="cfuDesc">Ordina: CFU (alto→basso)</option>
-                            <option value="cfuAsc">Ordina: CFU (basso→alto)</option>
-                        </select>
-                    </div>
-                </div>
             </div>
 
             <aside class="hero-right">
@@ -100,8 +83,7 @@
                         <h2 class="card-title">I tuoi corsi</h2>
                         <p class="card-sub">Nome, CFU, major e docente. Apri i dettagli per più info.</p>
                     </div>
-                    <span class="pill" id="visibleCountPill"
-                        th:text="|Visibili: ${courses != null ? courses.size() : 0}|">Visibili: 0</span>
+                    <span class="pill" th:text="|Totali: ${courses != null ? courses.size() : 0}|">Totali: 0</span>
                 </div>
 
                 <div class="card-body">
@@ -112,10 +94,7 @@
                     <div id="coursesGrid" class="courses-grid" th:if="${courses != null and !courses.isEmpty()}">
 
                         <article class="course-card" th:each="c : ${courses}" th:id="|course-${c.id}|"
-                            th:classappend="${selectedCourseId != null and selectedCourseId == c.id} ? ' is-selected' : ''"
-                            th:attr="data-name=${#strings.toLowerCase(c.name)},
-                                     data-cfu=${c.cfu},
-                                     data-prof=${#strings.toLowerCase(c.professor != null ? (c.professor.name + ' ' + c.professor.surname) : '')}">
+                            th:classappend="${selectedCourseId != null and selectedCourseId == c.id} ? ' is-selected' : ''">
                             <div class="course-accent"></div>
 
                             <div class="course-head">
@@ -205,20 +184,6 @@
                                         </div>
                                     </div>
 
-                                    <!-- opzionale: mostra solo i primi 6 studenti -->
-                                    <div class="students-preview"
-                                        th:if="${c.students != null and !c.students.isEmpty()}">
-                                        <div class="details-label">Prime iscrizioni</div>
-                                        <div class="avatars">
-                                            <span class="avatar" th:each="s,iter : ${c.students}"
-                                                th:if="${iter.index < 6}" th:title="|${s.name} ${s.surname}|"
-                                                th:text="${#strings.substring(s.name,0,1)}">A</span>
-
-                                            <span class="more" th:if="${c.students.size() > 6}"
-                                                th:text="|+${c.students.size() - 6}|">+0</span>
-                                        </div>
-                                    </div>
-
                                     <div class="exam-block"
                                         th:if="${selectedCourseId != null and selectedCourseId == c.id}">
 
@@ -283,9 +248,9 @@
                 <section class="card mini side-card">
                     <h3>Tips</h3>
                     <p class="note">
-                        Usa la barra di ricerca per filtrare corsi per <strong>nome</strong>, <strong>docente</strong> o
-                        <strong>major</strong>.
-                        L’ordinamento è immediato e non richiede refresh.
+                        Usa la sezione <strong>Dettagli</strong> per vedere percorso, semestre e iscritti. 
+                        <br>Gli appelli compaiono solo alla selezione del bottone
+                        <strong>Visualizza Appelli</strong>
                     </p>
                 </section>
 
@@ -310,71 +275,6 @@
         </main>
 
     </div>
-
-    <script>
-        (function () {
-            const grid = document.getElementById('coursesGrid');
-            if (!grid) return;
-
-            const cards = Array.from(grid.querySelectorAll('.course-card'));
-            const search = document.getElementById('courseSearch');
-            const sort = document.getElementById('courseSort');
-            const pill = document.getElementById('visibleCountPill');
-
-            function normalize(s) {
-                return (s || '').toLowerCase().trim();
-            }
-
-            function visibleCards() {
-                return cards.filter(c => c.style.display !== 'none');
-            }
-
-            function updatePill() {
-                const n = visibleCards().length;
-                pill.textContent = 'Visibili: ' + n;
-            }
-
-            function applyFilter() {
-                const q = normalize(search.value);
-                cards.forEach(card => {
-                    const hay = [
-                        card.dataset.name,
-                        card.dataset.major,
-                        card.dataset.prof
-                    ].join(' ');
-                    card.style.display = hay.includes(q) ? '' : 'none';
-                });
-                applySort();
-                updatePill();
-            }
-
-            function applySort() {
-                const mode = sort.value;
-
-                const list = visibleCards().slice();
-                list.sort((a, b) => {
-                    const an = a.dataset.name || '';
-                    const bn = b.dataset.name || '';
-                    const ac = parseInt(a.dataset.cfu || '0', 10);
-                    const bc = parseInt(b.dataset.cfu || '0', 10);
-
-                    if (mode === 'nameAsc') return an.localeCompare(bn);
-                    if (mode === 'nameDesc') return bn.localeCompare(an);
-                    if (mode === 'cfuAsc') return ac - bc;
-                    if (mode === 'cfuDesc') return bc - ac;
-                    return 0;
-                });
-
-                list.forEach(el => grid.appendChild(el));
-            }
-
-            search.addEventListener('input', applyFilter);
-            sort.addEventListener('change', () => { applySort(); updatePill(); });
-
-            applySort();
-            updatePill();
-        })();
-    </script>
 </body>
 
 </html>

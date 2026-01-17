@@ -17,12 +17,14 @@ public class SortUtility {
             "student.surname",
             "student.name",
             "student.email",
+            "student.major",
             "result",
             "status");
     public static final Map<String, String> SORT_MAPPING = Map.of(
             "student.surname", "student.user.surname",
             "student.name", "student.user.name",
             "student.email", "student.user.email",
+            "student.major", "student.major.name",
             "result", "result.id",
             "status", "status.id");
 

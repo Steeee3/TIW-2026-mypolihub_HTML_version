@@ -281,6 +281,13 @@
     white-space: normal;
 }
 
+.table td.major-cell {
+    max-width: 260px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 .header-actions {
     display: flex;
     align-items: center;
@@ -360,4 +367,126 @@
     .btn-finalize:hover {
         background: color-mix(in srgb, #22c55e 16%, transparent);
     }
+}
+
+/* -------------------------
+   STATUS COLORS
+   values: non inserito, inserito, pubblicato, rifiutato, verbalizzato
+-------------------------- */
+
+.tag-status[data-status="non inserito"] {
+    background: rgba(148, 163, 184, 0.18);
+    border-color: rgba(148, 163, 184, 0.35);
+    color: rgba(148, 163, 184, 1);
+}
+
+.tag-status[data-status="inserito"] {
+    background: rgba(245, 158, 11, 0.18);
+    border-color: rgba(245, 158, 11, 0.35);
+    color: rgba(245, 158, 11, 1);
+}
+
+.tag-status[data-status="pubblicato"] {
+    background: rgba(34, 197, 94, 0.16);
+    border-color: rgba(34, 197, 94, 0.35);
+    color: rgba(34, 197, 94, 1);
+}
+
+.tag-status[data-status="rifiutato"] {
+    background: rgba(239, 68, 68, 0.16);
+    border-color: rgba(239, 68, 68, 0.35);
+    color: rgba(239, 68, 68, 1);
+}
+
+.tag-status[data-status="verbalizzato"] {
+    background: rgba(59, 130, 246, 0.16);
+    border-color: rgba(59, 130, 246, 0.35);
+    color: rgba(59, 130, 246, 1);
+}
+
+.tag-status {
+    background: rgba(148, 163, 184, 0.12);
+    border-color: rgba(148, 163, 184, 0.25);
+    color: rgba(148, 163, 184, 0.95);
+}
+
+/* -------------------------
+   RESULT COLORS
+   order: vuoto, assente, rimandato, riprovato, 18..30, 30 e lode
+-------------------------- */
+
+/* vuoto */
+.tag-result.is-empty,
+.tag-result[data-result=""] {
+    background: rgba(148, 163, 184, 0.14);
+    border-color: rgba(148, 163, 184, 0.28);
+    color: rgba(148, 163, 184, 1);
+}
+
+/* assente */
+.tag-result[data-result="assente"] {
+    background: rgba(100, 116, 139, 0.18);
+    border-color: rgba(100, 116, 139, 0.35);
+    color: rgba(100, 116, 139, 1);
+}
+
+/* riprovato */
+.tag-result[data-result="riprovato"] {
+    background: rgba(239, 68, 68, 0.16);
+    border-color: rgba(239, 68, 68, 0.35);
+    color: rgba(239, 68, 68, 1);
+}
+
+/* rimandato */
+.tag-result[data-result="rimandato"] {
+    background: rgba(245, 158, 11, 0.18);
+    border-color: rgba(245, 158, 11, 0.35);
+    color: rgba(245, 158, 11, 1);
+}
+
+/* 30 e lode (gestisco anche varianti comuni) */
+.tag-result[data-result="30 e lode"],
+.tag-result[data-result="30 e lode "],
+.tag-result[data-result="30l"],
+.tag-result[data-result="30lode"],
+.tag-result[data-result="30 e lode."] {
+    background: rgba(168, 85, 247, 0.16);
+    border-color: rgba(168, 85, 247, 0.35);
+    color: rgba(168, 85, 247, 1);
+}
+
+/* numerici (18..30): blu -> verde, semplice e leggibile */
+.tag-result[data-result="18"],
+.tag-result[data-result="19"],
+.tag-result[data-result="20"],
+.tag-result[data-result="21"],
+.tag-result[data-result="22"] {
+    background: rgba(59, 130, 246, 0.14);
+    border-color: rgba(59, 130, 246, 0.30);
+    color: rgba(59, 130, 246, 1);
+}
+
+.tag-result[data-result="23"],
+.tag-result[data-result="24"],
+.tag-result[data-result="25"],
+.tag-result[data-result="26"],
+.tag-result[data-result="27"] {
+    background: rgba(16, 185, 129, 0.14);
+    border-color: rgba(16, 185, 129, 0.30);
+    color: rgba(16, 185, 129, 1);
+}
+
+.tag-result[data-result="28"],
+.tag-result[data-result="29"],
+.tag-result[data-result="30"] {
+    background: rgba(34, 197, 94, 0.16);
+    border-color: rgba(34, 197, 94, 0.35);
+    color: rgba(34, 197, 94, 1);
+}
+
+/* fallback */
+.tag-result {
+    background: rgba(148, 163, 184, 0.12);
+    border-color: rgba(148, 163, 184, 0.25);
+    color: rgba(148, 163, 184, 0.95);
 }

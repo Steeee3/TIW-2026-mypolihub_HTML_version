@@ -149,6 +149,20 @@
                                     </a>
                                 </th>
 
+                                <!-- Major -->
+                                <th th:with="
+                                    key='student.major',
+                                    active=${sortKey == key},
+                                    isAsc=${#strings.equalsIgnoreCase(sortDir, 'asc')},
+                                    nextDir=${active ? (isAsc ? 'desc' : 'asc') : 'asc'}
+                                " th:classappend="${active} ? ' is-active' : ''">
+                                    <a class="th-link"
+                                        th:href="@{/professor/exam(examId=${examId}, sort=${key}, sortDir=${nextDir}, editStudentNumber=${editStudentNumber})}">
+                                        Corso di studi
+                                        <span th:class="|sort-ico${active ? (isAsc ? ' asc' : ' desc') : ''}|"></span>
+                                    </a>
+                                </th>
+
                                 <!-- Result -->
                                 <th th:with="
                                     key='result',
@@ -183,7 +197,9 @@
 
                         <tbody>
                             <th:block th:each="r : ${registrations}"
-                                th:with="isEditing=${editStudentNumber != null and editStudentNumber == r.student.number}">
+                                th:with="isEditing=${editStudentNumber != null and editStudentNumber == r.student.number},
+                                    s=${#strings.toLowerCase(#strings.trim(r.status))},
+                                    canEditRow=${s == 'non inserito' or s == 'inserito'}">
 
                                 <!-- Riga normale -->
                                 <tr>
@@ -191,10 +207,16 @@
                                     <td th:text="${r.student.surname}">Rossi</td>
                                     <td th:text="${r.student.name}">Mario</td>
                                     <td class="mono" th:text="${r.student.email}">mario.rossi@...</td>
+                                    <td class="major-cell" th:text="${r.student.major != null 
+                                        ? (r.student.major.name + ' · ' + r.student.major.degreeLevel.name) 
+                                        : '—'}">
+                                        —
+                                    </td>
 
                                     <td>
                                         <span class="tag tag-result"
                                             th:classappend="${#strings.isEmpty(r.result?.value)} ? ' is-empty' : ''"
+                                            th:attr="data-result=${#strings.toLowerCase(#strings.trim(#strings.isEmpty(r.result?.value) ? '' : r.result.value))}"
                                             th:text="${#strings.isEmpty(r.result?.value) ? '—' : r.result.value}">
                                             —
                                         </span>
@@ -208,7 +230,7 @@
 
                                     <td class="actions-cell">
                                         <!-- open -->
-                                        <a class="btn btn-accent btn-sm" th:if="${!isEditing}"
+                                        <a class="btn btn-accent btn-sm" th:if="${!isEditing and canEditRow}"
                                             th:href="@{/professor/exam(examId=${examId}, sort=${sortKey}, sortDir=${sortDir}, editStudentNumber=${r.student.number})}">
                                             <span class="icon"></span> MODIFICA
                                         </a>
@@ -218,12 +240,15 @@
                                             th:href="@{/professor/exam(examId=${examId}, sort=${sortKey}, sortDir=${sortDir})}">
                                             Chiudi
                                         </a>
+
+                                        <!-- placeholder -->
+                                        <span class="muted" th:if="${!isEditing and !canEditRow}">—</span>
                                     </td>
                                 </tr>
 
-                                <!-- Riga form (solo se questa riga è in editing) -->
-                                <tr class="edit-row" th:if="${isEditing}">
-                                    <td colspan="7">
+                                <!-- Riga form -->
+                                <tr class="edit-row" th:if="${isEditing and canEditRow}">
+                                    <td colspan="8">
                                         <div class="edit-panel">
                                             <div class="edit-head">
                                                 <div>
