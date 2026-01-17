@@ -10,13 +10,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import it.polimi.mypolihub.DTO.ReportDTO;
-import it.polimi.mypolihub.entity.Course;
 import it.polimi.mypolihub.entity.Exam;
-import it.polimi.mypolihub.entity.Professor;
 import it.polimi.mypolihub.entity.Registration;
 import it.polimi.mypolihub.entity.Report;
 import it.polimi.mypolihub.repository.RegistrationRepository;
 import it.polimi.mypolihub.repository.ReportRepository;
+import it.polimi.mypolihub.utils.SortUtility;
 
 @Service
 public class ReportService {
@@ -27,11 +26,13 @@ public class ReportService {
     @Autowired
     private RegistrationRepository registrationRepository;
 
+    // -----------------------------
+    // Report creation
+    // -----------------------------
+
     @Transactional
     public Report createReport(Exam exam) {
-        if (exam == null) {
-            throw new IllegalArgumentException("Exam must exist");
-        }
+        assertExamProvided(exam);
 
         Report report = new Report();
         report.setExam(exam);
@@ -42,30 +43,63 @@ public class ReportService {
         return report;
     }
 
+    // -----------------------------
+    // Report visualization (single)
+    // -----------------------------
+
     @Transactional(readOnly = true)
-    public ReportDTO getReportByIdSortedBy(Integer professorId, Integer reportId, String sortBy,
+    public ReportDTO getReportByIdSortedBy(
+            Integer professorId,
+            Integer reportId,
+            String sortBy,
             String sortDir) {
-        Sort.Direction dir = "desc".equalsIgnoreCase(sortDir) ? Sort.Direction.DESC : Sort.Direction.ASC;
-        Sort sort = Sort.by(dir, sortBy);
 
-        Report report = reportRepository.findById(reportId)
-                .orElseThrow(() -> new IllegalArgumentException("Il verbale fornito non esiste"));
+        assertProfessorOwnsReport(professorId, reportId);
 
-        Course course = report.getExam().getCourse();
-        Professor courseProfessor = course.getProfessor();
-        if (!professorId.equals(courseProfessor.getId())) {
-            throw new AccessDeniedException("Assicurati di essere il docente associato al corso.");
-        }
+        Sort sort = SortUtility.toSort(sortBy, sortDir);
 
+        Report report = getReport(reportId);
         List<Registration> registrations = registrationRepository.findByReport_Id(reportId, sort);
 
         return new ReportDTO(report, registrations);
     }
 
+    // -----------------------------
+    // Reports listing (by course)
+    // -----------------------------
+
     @Transactional(readOnly = true)
     public List<ReportDTO> getReportsForCourse(Integer professorId, Integer courseId) {
-        return reportRepository.findAllByExam_Course_IdAndExam_Course_Professor_IdOrderByExam_DateAsc(courseId, professorId).stream()
-            .map(r -> new ReportDTO(r, List.of()))
-            .toList();
+        return reportRepository
+                .findAllByExam_Course_IdAndExam_Course_Professor_IdOrderByExam_DateAsc(courseId, professorId)
+                .stream()
+                .map(r -> new ReportDTO(r, List.of()))
+                .toList();
+    }
+
+    // -----------------------------
+    // Helpers: validation / access control
+    // -----------------------------
+
+    private void assertExamProvided(Exam exam) {
+        if (exam == null) {
+            throw new IllegalArgumentException("Exam must exist");
+        }
+    }
+
+    private void assertProfessorOwnsReport(Integer professorId, Integer reportId) {
+        boolean allowed = reportRepository.existsByIdAndExam_Course_Professor_Id(reportId, professorId);
+        if (!allowed) {
+            throw new AccessDeniedException("Assicurati di essere il docente associato al corso.");
+        }
+    }
+
+    // -----------------------------
+    // Helpers: getters
+    // -----------------------------
+
+    private Report getReport(Integer reportId) {
+        return reportRepository.findById(reportId)
+                .orElseThrow(() -> new IllegalArgumentException("Il verbale fornito non esiste"));
     }
 }

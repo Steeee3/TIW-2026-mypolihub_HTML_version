@@ -21,13 +21,13 @@ public class EsitoController {
 
 	@Autowired
 	private ExamService examService;
-    
-    @GetMapping("/student/result")
-    public String result(
+
+	@GetMapping("/student/result")
+	public String result(
 			@RequestParam(name = "examId", required = false) Integer examId,
-            @AuthenticationPrincipal CustomUserDetails principal,
-            Authentication auth,
-            Model model) {
+			@AuthenticationPrincipal CustomUserDetails principal,
+			Authentication auth,
+			Model model) {
 		Role role = Role.from(auth);
 
 		if (examId == null) {
@@ -36,33 +36,45 @@ public class EsitoController {
 
 		try {
 			RegistrationDTO registration = examService.getResultByStudentIdAndExamId(principal.getId(), examId);
-
-			model.addAttribute("registration", registration);
-			model.addAttribute("notPublished", false);
-
-			if (registration.canBeDeclined()) {
-				model.addAttribute("canDecline", true);
-			} else {
-				model.addAttribute("canDecline", false);
-			}
+			fillResultModel(registration, model);
 		} catch (IllegalArgumentException e) {
-			model.addAttribute("errorMessage", e.getMessage());
-			model.addAttribute("notPublished", true);
+			fillNotPublishedModel(e.getMessage(), model);
 		}
 
-		model.addAttribute("examId", examId);
-		model.addAttribute("helloName", principal.getName());
-        model.addAttribute("role", role);
+		addCommonAttributes(principal, role, examId, model);
 
-        return "result";
-    }
+		return "result";
+	}
+
+	private void fillResultModel(RegistrationDTO registration, Model model) {
+		model.addAttribute("registration", registration);
+		model.addAttribute("notPublished", false);
+
+		if (registration.canBeDeclined()) {
+			model.addAttribute("canDecline", true);
+		} else {
+			model.addAttribute("canDecline", false);
+		}
+	}
+
+	private void fillNotPublishedModel(String errorMessage, Model model) {
+		model.addAttribute("errorMessage", errorMessage);
+		model.addAttribute("notPublished", true);
+	}
+
+	private void addCommonAttributes(CustomUserDetails principal, Role role, Integer examId, Model model) {
+		model.addAttribute("examId", examId);
+
+		model.addAttribute("helloName", principal.getName());
+		model.addAttribute("role", role);
+	}
 
 	@PostMapping("/student/result/{examId}/decline")
 	public String declineResult(
-		@PathVariable Integer examId,
-		@AuthenticationPrincipal CustomUserDetails principal,
-        RedirectAttributes ra) {
-		
+			@PathVariable Integer examId,
+			@AuthenticationPrincipal CustomUserDetails principal,
+			RedirectAttributes ra) {
+
 		try {
 			examService.declineExamResult(principal.getId(), examId);
 			ra.addFlashAttribute("successMessage", "Voto rifiutato con successo");

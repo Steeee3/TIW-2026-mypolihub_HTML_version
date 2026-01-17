@@ -1,8 +1,6 @@
 package it.polimi.mypolihub.controller;
 
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -22,6 +20,8 @@ import it.polimi.mypolihub.entity.Role;
 import it.polimi.mypolihub.security.CustomUserDetails;
 import it.polimi.mypolihub.service.ExamService;
 import it.polimi.mypolihub.service.ResultService;
+import it.polimi.mypolihub.utils.SortUtility;
+import it.polimi.mypolihub.utils.SortUtility.SortKey;
 
 @Controller
 public class IscrittiController {
@@ -31,26 +31,6 @@ public class IscrittiController {
 
     @Autowired
     private ResultService resultService;
-
-    private record SortKey(String ui, String jpa) {
-    }
-
-    private static final String DEFAULT_SORT = "student.number";
-    private static final String DEFAULT_DIR = "asc";
-
-    private static final Set<String> ALLOWED_SORTS = Set.of(
-            "student.number",
-            "student.surname",
-            "student.name",
-            "student.email",
-            "result",
-            "status");
-    private static final Map<String, String> SORT_MAPPING = Map.of(
-            "student.surname", "student.user.surname",
-            "student.name", "student.user.name",
-            "student.email", "student.user.email",
-            "result", "result.id",
-            "status", "status.id");
 
     @GetMapping("/professor/exam")
     public String iscritti(
@@ -67,32 +47,15 @@ public class IscrittiController {
             return "redirect:/home";
         }
 
-        SortKey sortKey = getValidSortKeyFrom(sort);
-        sortDir = getvalidSortDirFrom(sortDir);
+        SortKey sortKey = SortUtility.getValidSortKeyFrom(sort);
+        sortDir = SortUtility.getValidSortDirFrom(sortDir);
 
         List<RegistrationDTO> registrations = examService.getStudentsByExamIdSortedBy(principal.getId(), examId,
-                sortKey.jpa, sortDir);
+                sortKey.jpa(), sortDir);
 
-        fillModel(role, principal, examId, sortDir, sortKey.ui, registrations, editStudentNumber, model);
+        fillModel(role, principal, examId, sortDir, sortKey.ui(), registrations, editStudentNumber, model);
 
         return "iscritti";
-    }
-
-    private SortKey getValidSortKeyFrom(String sort) {
-        String ui = (sort == null || sort.isBlank()) ? DEFAULT_SORT : sort;
-        if (!ALLOWED_SORTS.contains(ui)) {
-            ui = DEFAULT_SORT;
-        }
-        String jpa = SORT_MAPPING.getOrDefault(ui, ui);
-        
-        return new SortKey(ui, jpa);
-    }
-
-    private String getvalidSortDirFrom(String sortDir) {
-        if (sortDir == null || sortDir.isBlank()) {
-            return DEFAULT_DIR;
-        }
-        return sortDir;
     }
 
     private void fillModel(

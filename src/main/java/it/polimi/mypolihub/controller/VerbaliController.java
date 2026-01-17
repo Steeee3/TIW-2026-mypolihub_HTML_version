@@ -1,8 +1,6 @@
 package it.polimi.mypolihub.controller;
 
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -18,6 +16,8 @@ import it.polimi.mypolihub.entity.Role;
 import it.polimi.mypolihub.security.CustomUserDetails;
 import it.polimi.mypolihub.service.CourseService;
 import it.polimi.mypolihub.service.ReportService;
+import it.polimi.mypolihub.utils.SortUtility;
+import it.polimi.mypolihub.utils.SortUtility.SortKey;
 
 @Controller
 public class VerbaliController {
@@ -27,21 +27,6 @@ public class VerbaliController {
 
     @Autowired
     private ReportService reportService;
-
-    private static final String DEFAULT_SORT = "student.number";
-    private static final String DEFAULT_DIR = "asc";
-
-    private static final Set<String> ALLOWED_SORTS = Set.of(
-            "student.number",
-            "student.surname",
-            "student.name",
-            "student.email",
-            "result");
-    private final Map<String, String> SORT_MAPPING = Map.of(
-            "student.surname", "student.user.surname",
-            "student.name", "student.user.name",
-            "student.email", "student.user.email",
-            "result", "result.id");
 
     @GetMapping("/professor/reports")
     public String verbali(
@@ -61,10 +46,10 @@ public class VerbaliController {
     }
 
     private String showSingleReport(
-            @RequestParam(name = "reportId", required = false) Integer reportId,
-            @RequestParam(name = "sort", required = false) String sort,
-            @RequestParam(name = "sortDir", required = false) String sortDir,
-            @AuthenticationPrincipal CustomUserDetails principal,
+            Integer reportId,
+            String sort,
+            String sortDir,
+            CustomUserDetails principal,
             Authentication auth,
             Model model) {
 
@@ -74,44 +59,50 @@ public class VerbaliController {
             return "redirect:/home";
         }
 
-        sort = (sort == null || sort.isBlank()) ? DEFAULT_SORT : sort;
-        if (!ALLOWED_SORTS.contains(sort)) {
-            sort = DEFAULT_SORT;
-        }
-        String sortKey = SORT_MAPPING.getOrDefault(sort, sort);
-
-        if (sortDir == null || sortDir.isBlank()) {
-            sortDir = DEFAULT_DIR;
-        }
+        SortKey sortKey = SortUtility.getValidSortKeyFrom(sort);
+        sortDir = SortUtility.getValidSortDirFrom(sortDir);
 
         ReportDTO report = null;
         try {
-            report = reportService.getReportByIdSortedBy(principal.getId(), reportId, sortKey, sortDir);
+            report = reportService.getReportByIdSortedBy(principal.getId(), reportId, sortKey.jpa(), sortDir);
 
-            model.addAttribute("report", report);
-
-            model.addAttribute("examId", report.getExam().getId());
-            model.addAttribute("registrations", report.getRegistrations());
-
-            model.addAttribute("verbalizedCount", report.getRegistrations().size());
+            fillSingleReportModel(report, model);
         } catch (IllegalArgumentException e) {
             model.addAttribute("errorMessage", e.getMessage());
         }
 
-        model.addAttribute("reportId", reportId);
-
-        model.addAttribute("sortKey", sort);
-        model.addAttribute("sortDir", sortDir);
-
-        model.addAttribute("helloName", principal.getName());
-        model.addAttribute("role", role);
+        addCommonReportAttributes(principal, role, reportId, sortKey, sortDir, model);
 
         return "report";
     }
 
+    private void fillSingleReportModel(ReportDTO report, Model model) {
+        model.addAttribute("report", report);
+        model.addAttribute("examId", report.getExam().getId());
+        model.addAttribute("registrations", report.getRegistrations());
+        model.addAttribute("verbalizedCount", report.getRegistrations().size());
+    }
+
+    private void addCommonReportAttributes(
+            CustomUserDetails principal,
+            Role role,
+            Integer reportId,
+            SortKey sortKey,
+            String sortDir,
+            Model model) {
+
+        model.addAttribute("reportId", reportId);
+
+        model.addAttribute("sortKey", sortKey.ui());
+        model.addAttribute("sortDir", sortDir);
+
+        model.addAttribute("helloName", principal.getName());
+        model.addAttribute("role", role);
+    }
+
     private String showAllCoursesAndReportsIdRequested(
-            @RequestParam(name = "courseId", required = false) Integer courseId,
-            @AuthenticationPrincipal CustomUserDetails principal,
+            Integer courseId,
+            CustomUserDetails principal,
             Authentication auth,
             Model model) {
         Role role = Role.from(auth);

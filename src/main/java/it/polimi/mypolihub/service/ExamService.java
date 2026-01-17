@@ -26,6 +26,7 @@ import it.polimi.mypolihub.repository.RegistrationRepository;
 import it.polimi.mypolihub.repository.ResultRepository;
 import it.polimi.mypolihub.repository.StatusRepository;
 import it.polimi.mypolihub.repository.StudentRepository;
+import it.polimi.mypolihub.utils.SortUtility;
 
 @Service
 public class ExamService {
@@ -129,7 +130,6 @@ public class ExamService {
 		assertDeclinable(registration);
 
 		registration.setStatus(getStatus(DefaultValues.STATUS_RIFIUTATO_ID));
-		// @Transactional => dirty checking
 	}
 
 	// -----------------------------
@@ -145,7 +145,7 @@ public class ExamService {
 
 		assertProfessorOwnsExam(professorId, examId);
 
-		Sort sort = toSort(sortBy, sortDir);
+		Sort sort = SortUtility.toSort(sortBy, sortDir);
 
 		return registrationRepository.findByExam_Id(examId, sort).stream()
 				.map(RegistrationDTO::new)
@@ -241,16 +241,8 @@ public class ExamService {
 	}
 
 	// -----------------------------
-	// Helpers: sort / access control
+	// Helpers: access control
 	// -----------------------------
-
-	private Sort toSort(String sortBy, String sortDir) {
-		Sort.Direction direction = "desc".equalsIgnoreCase(sortDir)
-				? Sort.Direction.DESC
-				: Sort.Direction.ASC;
-
-		return Sort.by(direction, sortBy);
-	}
 
 	private void assertProfessorOwnsExam(Integer professorId, Integer examId) {
 		if (!examRepository.existsByIdAndCourse_Professor_Id(examId, professorId)) {
