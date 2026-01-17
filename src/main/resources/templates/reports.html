@@ -47,55 +47,57 @@
 
                 <h2 class="hero-title">Verbali</h2>
                 <p class="hero-sub">
-                    Elenco dei verbali creati: ordinati per <strong>nome del corso</strong> (A→Z) e per <strong>data
-                        appello</strong> (crescente).
-                    Apri un corso e clicca un verbale per vedere i dettagli.
+                    Seleziona un corso e premi <strong>Mostra verbali</strong>: i verbali verranno caricati e mostrati
+                    <strong>solo sotto il corso selezionato</strong>, per mantenere la pagina leggera.
                 </p>
             </div>
 
             <aside class="hero-right">
                 <div class="stat-card">
                     <div class="stat-top">
-                        <div class="stat-title">Totale verbali</div>
-                        <div class="stat-badge" th:text="${reportsCount != null ? reportsCount : 0}">0</div>
+                        <div class="stat-title">Corsi</div>
+                        <div class="stat-badge" th:text="${courses != null ? courses.size() : 0}">0</div>
                     </div>
-                    <div class="stat-sub">Verbali creati dal tuo account</div>
+                    <div class="stat-sub">Corsi assegnati al tuo account</div>
                 </div>
 
                 <div class="stat-card">
                     <div class="stat-top">
-                        <div class="stat-title">Corsi con verbali</div>
-                        <div class="stat-badge"
-                            th:text="${coursesWithReportsCount != null ? coursesWithReportsCount : 0}">0</div>
+                        <div class="stat-title">Verbali caricati</div>
+                        <div class="stat-badge" th:text="${reports != null ? reports.size() : 0}">0</div>
                     </div>
-                    <div class="stat-sub">Numero di corsi che hanno almeno un verbale</div>
+                    <div class="stat-sub">
+                        Mostrati solo quando selezioni un corso
+                    </div>
                 </div>
             </aside>
         </section>
 
         <!-- MAIN -->
         <main class="main-grid">
+
             <!-- COURSES -->
             <section class="card courses-card">
                 <div class="card-header">
                     <div>
                         <h2 class="card-title">Verbali per corso</h2>
-                        <p class="card-sub">Apri “Verbali” per vedere la lista.</p>
+                        <p class="card-sub">
+                            Premi “Mostra verbali” su un corso per caricare e visualizzare la lista.
+                        </p>
                     </div>
-                    <span class="pill" th:text="|Totali: ${reportsCount != null ? reportsCount : 0}|">Totali: 0</span>
+
+                    <span class="pill" th:text="|Corsi: ${courses != null ? courses.size() : 0}|">Corsi: 0</span>
                 </div>
 
                 <div class="card-body">
-                    <div class="note" th:if="${reports == null or reports.isEmpty()}">
-                        Non hai ancora creato alcun verbale.
-                    </div>
+
                     <div class="note" th:if="${courses == null or courses.isEmpty()}">
-                        Nessun corso con verbali disponibile.
+                        Nessun corso disponibile.
                     </div>
 
-                    <div id="coursesGrid" class="courses-grid" th:if="${courses != null}">
+                    <div id="coursesGrid" class="courses-grid" th:if="${courses != null and !courses.isEmpty()}">
                         <article class="course-card" th:each="c : ${courses}" th:id="|course-${c.id}|"
-                            th:with="courseReports=${reportsByCourseId[c.id]}">
+                            th:classappend="${selectedCourseId != null and selectedCourseId == c.id} ? ' is-selected' : ''">
 
                             <div class="course-accent"></div>
 
@@ -121,27 +123,40 @@
                                                 th:text="${c.professor != null ? (c.professor.name + ' ' + c.professor.surname) : '—'}">Docente</span>
                                         </span>
 
+                                        <!-- LOAD REPORTS ONLY WHEN CLICKED -->
                                         <a class="btn btn-accent" style="padding: 9px 12px;"
-                                            th:href="|#course-${c.id}|">
+                                            th:href="@{/professor/reports(courseId=${c.id})} + '#course-' + ${c.id}">
                                             <span class="icon"></span> Mostra Verbali
+                                        </a>
+
+                                        <!-- OPTIONAL: close/hide -->
+                                        <a class="btn btn-ghost" style="padding: 9px 12px;"
+                                            th:if="${selectedCourseId != null and selectedCourseId == c.id}"
+                                            th:href="@{/professor/reports} + '#course-' + ${c.id}">
+                                            Chiudi
                                         </a>
                                     </div>
                                 </div>
 
                                 <div class="course-kpi">
                                     <div class="k">
-                                        <div class="num" th:text="${courseReports != null ? courseReports.size() : 0}">0
+                                        <!-- reports è già filtrato per courseId dal controller -->
+                                        <div class="num"
+                                            th:text="${(selectedCourseId != null and selectedCourseId == c.id and reports != null) ? reports.size() : 0}">
+                                            0
                                         </div>
                                         <div class="txt">Verbali</div>
                                     </div>
                                 </div>
                             </div>
 
-                            <details class="course-details">
+                            <!-- DETAILS -->
+                            <details class="course-details"
+                                th:open="${selectedCourseId != null and selectedCourseId == c.id}">
                                 <summary>
                                     <span class="summary-left">
                                         <span class="chev"></span>
-                                        Verbali
+                                        Dettagli
                                     </span>
                                 </summary>
 
@@ -151,7 +166,8 @@
                                         <div class="details-label">Docente</div>
                                         <div class="details-value"
                                             th:text="${c.professor != null ? (c.professor.name + ' ' + c.professor.surname) : '—'}">
-                                            —</div>
+                                            —
+                                        </div>
                                     </div>
 
                                     <div class="details-row" th:if="${c.majors != null and !c.majors.isEmpty()}">
@@ -169,29 +185,46 @@
                                     <div class="exam-block">
                                         <div class="exam-head">
                                             <div class="details-label">Verbali disponibili</div>
+
                                             <span class="mini-pill"
-                                                th:text="${courseReports != null ? courseReports.size() : 0}">0</span>
+                                                th:text="${(selectedCourseId != null and selectedCourseId == c.id and reports != null) ? reports.size() : 0}">
+                                                0
+                                            </span>
                                         </div>
 
-                                        <div class="exam-list"
-                                            th:if="${courseReports != null and !courseReports.isEmpty()}">
-                                            <a class="exam-item" th:each="r : ${courseReports}"
-                                                th:href="@{/professor/reports(reportId=${r.id})}"
-                                                th:with="rows=${r.registrations != null ? r.registrations.size() : 0}">
-
-                                                <div class="exam-date"
-                                                    th:text="${#temporals.format(r.exam.date, 'dd/MM/yyyy')}">01/01/2026
-                                                </div>
-                                                <div class="exam-time"
-                                                    th:text="${#temporals.format(r.exam.date, 'HH:mm')}">10:30</div>
-                                                <div class="exam-cta" th:text="|Verbale #${r.id}|">Apri
-                                                </div>
-                                            </a>
+                                        <!-- If course NOT selected -> show hint -->
+                                        <div class="note"
+                                            th:if="${selectedCourseId == null or selectedCourseId != c.id}">
+                                            Premi “Mostra verbali” per caricare la lista.
                                         </div>
 
-                                        <div class="note" style="margin-top:10px;"
-                                            th:if="${courseReports == null or courseReports.isEmpty()}">
-                                            Nessun verbale disponibile.
+                                        <!-- If selected -> show list -->
+                                        <div th:if="${selectedCourseId != null and selectedCourseId == c.id}">
+                                            <div class="exam-list" th:if="${reports != null and !reports.isEmpty()}">
+
+                                                <a class="exam-item" th:each="r : ${reports}"
+                                                    th:href="@{/professor/reports(courseId=${c.id}, reportId=${r.id})}">
+
+                                                    <div class="exam-date"
+                                                        th:text="|Appello del ${#temporals.format(r.exam.date, 'dd/MM/yyyy')} \ Verbale del ${#temporals.format(r.timestamp, 'dd/MM/yyyy HH:mm')}|">
+                                                        01/01/2026
+                                                    </div>
+
+                                                    <div class="exam-time"
+                                                        th:text="${#temporals.format(r.exam.date, 'HH:mm')}">
+                                                        10:30
+                                                    </div>
+
+                                                    <div class="exam-cta" th:text="|Verbale #${r.id}|">
+                                                        Apri
+                                                    </div>
+                                                </a>
+                                            </div>
+
+                                            <div class="note" style="margin-top:10px;"
+                                                th:if="${reports == null or reports.isEmpty()}">
+                                                Nessun verbale disponibile per questo corso.
+                                            </div>
                                         </div>
                                     </div>
 
@@ -207,8 +240,7 @@
                 <section class="card mini side-card">
                     <h3>Come funziona</h3>
                     <p class="note">
-                        Apri un corso → sezione “Verbali” → clicca un verbale per vedere i dettagli e la tabella delle
-                        righe verbalizzate.
+                        Seleziona un corso → premi “Mostra verbali” → i verbali vengono caricati solo per quel corso.
                     </p>
                 </section>
 
@@ -216,17 +248,17 @@
                     <h3>Stato</h3>
                     <div class="kpi">
                         <div class="box">
-                            <div class="num" th:text="${reportsCount != null ? reportsCount : 0}">0</div>
-                            <div class="txt">Verbali</div>
+                            <div class="num" th:text="${courses != null ? courses.size() : 0}">0</div>
+                            <div class="txt">Corsi</div>
                         </div>
                         <div class="box">
-                            <div class="num" th:text="${coursesWithReportsCount != null ? coursesWithReportsCount : 0}">
-                                0</div>
-                            <div class="txt">Corsi</div>
+                            <div class="num" th:text="${reports != null ? reports.size() : 0}">0</div>
+                            <div class="txt">Caricati</div>
                         </div>
                     </div>
                 </section>
             </aside>
+
         </main>
 
     </div>

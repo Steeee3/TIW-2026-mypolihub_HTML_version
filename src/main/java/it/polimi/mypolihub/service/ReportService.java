@@ -63,8 +63,8 @@ public class ReportService {
     }
 
     @Transactional(readOnly = true)
-    public List<ReportDTO> findReportsByProfessorId(Integer professorId) {
-        return reportRepository.findAllByProfessor_IdSorted(professorId).stream()
+    public List<ReportDTO> getReportsForCourse(Integer professorId, Integer courseId) {
+        return reportRepository.findAllByExam_Course_IdAndExam_Course_Professor_IdOrderByExam_DateAsc(courseId, professorId).stream()
             .map(r -> new ReportDTO(r, List.of()))
             .toList();
     }

@@ -1,7 +1,5 @@
 package it.polimi.mypolihub.controller;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -18,10 +16,14 @@ import it.polimi.mypolihub.DTO.CourseDTO;
 import it.polimi.mypolihub.DTO.ReportDTO;
 import it.polimi.mypolihub.entity.Role;
 import it.polimi.mypolihub.security.CustomUserDetails;
+import it.polimi.mypolihub.service.CourseService;
 import it.polimi.mypolihub.service.ReportService;
 
 @Controller
 public class VerbaliController {
+
+    @Autowired
+    private CourseService courseService;
 
     @Autowired
     private ReportService reportService;
@@ -43,6 +45,7 @@ public class VerbaliController {
 
     @GetMapping("/professor/reports")
     public String verbali(
+            @RequestParam(name = "courseId", required = false) Integer courseId,
             @RequestParam(name = "reportId", required = false) Integer reportId,
             @RequestParam(name = "sort", required = false) String sort,
             @RequestParam(name = "sortDir", required = false) String sortDir,
@@ -51,20 +54,20 @@ public class VerbaliController {
             Model model) {
 
         if (reportId == null) {
-            return showAllReports(principal, auth, model);
+            return showAllCoursesAndReportsIdRequested(courseId, principal, auth, model);
         } else {
             return showSingleReport(reportId, sort, sortDir, principal, auth, model);
         }
     }
 
-    private String showSingleReport (
+    private String showSingleReport(
             @RequestParam(name = "reportId", required = false) Integer reportId,
             @RequestParam(name = "sort", required = false) String sort,
             @RequestParam(name = "sortDir", required = false) String sortDir,
             @AuthenticationPrincipal CustomUserDetails principal,
             Authentication auth,
             Model model) {
-            
+
         Role role = Role.from(auth);
 
         if (reportId == null) {
@@ -106,36 +109,41 @@ public class VerbaliController {
         return "report";
     }
 
-    private String showAllReports(
-        @AuthenticationPrincipal CustomUserDetails principal,
+    private String showAllCoursesAndReportsIdRequested(
+            @RequestParam(name = "courseId", required = false) Integer courseId,
+            @AuthenticationPrincipal CustomUserDetails principal,
             Authentication auth,
             Model model) {
-            
         Role role = Role.from(auth);
 
-        List<ReportDTO> reports = reportService.findReportsByProfessorId(principal.getId());
+        List<CourseDTO> courses = courseService.findCoursesByProfessorId(principal.getId()).reversed();
 
-        model.addAttribute("reports", reports);
-        model.addAttribute("reportsCount", reports.size());
-
-        LinkedHashMap<Integer, List<ReportDTO>> reportsByCourseId = new LinkedHashMap<>();
-        LinkedHashMap<Integer, CourseDTO> coursesById = new LinkedHashMap<>();
-
-        for (ReportDTO r : reports) {
-            CourseDTO c = r.getExam().getCourse();
-            Integer courseId = c.getId();
-
-            coursesById.putIfAbsent(courseId, c);
-            reportsByCourseId.computeIfAbsent(courseId, k -> new ArrayList<>()).add(r);
+        List<ReportDTO> reports = List.of();
+        if (teachesRequestedCourse(courseId, courses)) {
+            reports = reportService.getReportsForCourse(principal.getId(), courseId);
         }
 
-        model.addAttribute("courses", coursesById.values());
-        model.addAttribute("reportsByCourseId", reportsByCourseId);
-        model.addAttribute("coursesWithReportsCount", coursesById.size());
+        fillExamsAndReportModel(principal, role, courseId, courses, reports, model);
+
+        return "reports";
+    }
+
+    private boolean teachesRequestedCourse(Integer courseId, List<CourseDTO> courses) {
+        if (courseId == null || courses.isEmpty()) {
+            return false;
+        }
+
+        return courses.stream()
+                .anyMatch(c -> c.getId().equals(courseId));
+    }
+
+    private void fillExamsAndReportModel(CustomUserDetails principal, Role role, Integer courseId,
+            List<CourseDTO> courses, List<ReportDTO> reports, Model model) {
+        model.addAttribute("selectedCourseId", courseId);
+        model.addAttribute("courses", courses);
+        model.addAttribute("reports", reports);
 
         model.addAttribute("helloName", principal.getName());
         model.addAttribute("role", role);
-        
-        return "reports";
     }
 }
