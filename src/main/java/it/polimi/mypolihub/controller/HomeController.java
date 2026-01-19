@@ -44,10 +44,10 @@ public class HomeController {
 
         switch (role) {
             case STUDENT:
-                courses = courseService.findCoursesByStudentId(principal.getId());
+                courses = courseService.findCoursesByStudentIdOrderByNameDesc(principal.getId());
                 break;
             case PROFESSOR:
-                courses = courseService.findCoursesByProfessorId(principal.getId());
+                courses = courseService.findCoursesByProfessorIdOrderByNameDesc(principal.getId());
                 break;
             case ADMIN:
                 return "redirect:/admin/panel";

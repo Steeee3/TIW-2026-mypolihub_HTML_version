@@ -78,7 +78,7 @@ public class CourseService {
     }
 
     @Transactional
-    public List<CourseDTO> findCoursesByStudentId(Integer studentId) {
+    public List<CourseDTO> findCoursesByStudentIdOrderByNameDesc(Integer studentId) {
         List<CourseDTO> coursesDTO = new ArrayList<>();
 
         List<Course> courses = courseRepository.findByStudents_IdOrderByNameDesc(studentId);
@@ -90,10 +90,22 @@ public class CourseService {
     }
 
     @Transactional
-    public List<CourseDTO> findCoursesByProfessorId(Integer professorId) {
+    public List<CourseDTO> findCoursesByProfessorIdOrderByNameDesc(Integer professorId) {
         List<CourseDTO> coursesDTO = new ArrayList<>();
 
         List<Course> courses = courseRepository.findByProfessor_IdOrderByNameDesc(professorId);
+        for (Course course : courses) {
+            coursesDTO.add(new CourseDTO(course));
+        }
+
+        return coursesDTO;
+    }
+
+    @Transactional
+    public List<CourseDTO> findCoursesByProfessorIdOrderByNameAsc(Integer professorId) {
+        List<CourseDTO> coursesDTO = new ArrayList<>();
+
+        List<Course> courses = courseRepository.findByProfessor_IdOrderByNameAsc(professorId);
         for (Course course : courses) {
             coursesDTO.add(new CourseDTO(course));
         }

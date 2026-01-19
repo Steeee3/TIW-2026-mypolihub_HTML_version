@@ -107,7 +107,7 @@ public class VerbaliController {
             Model model) {
         Role role = Role.from(auth);
 
-        List<CourseDTO> courses = courseService.findCoursesByProfessorId(principal.getId()).reversed();
+        List<CourseDTO> courses = courseService.findCoursesByProfessorIdOrderByNameAsc(principal.getId());
 
         List<ReportDTO> reports = List.of();
         if (teachesRequestedCourse(courseId, courses)) {
