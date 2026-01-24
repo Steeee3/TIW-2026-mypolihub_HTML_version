@@ -209,13 +209,14 @@
                                                 <div class="exam-actions">
 
                                                     <span class="pill pill-ok" th:if="${role != null and role.name() == 'STUDENT'
-                           and registeredExamIds != null
-                           and registeredExamIds.contains(e.id)}">
+                                                        and registeredExamIds != null
+                                                        and registeredExamIds.contains(e.id)}">
                                                         <span class="ok-ico"></span> Iscritto
                                                     </span>
 
                                                     <form th:if="${role != null and role.name() == 'STUDENT'
-                           and (registeredExamIds == null or !registeredExamIds.contains(e.id))}" method="post"
+                                                        and (registeredExamIds == null or !registeredExamIds.contains(e.id))
+                                                        and #temporals.createNow().isBefore(e.date)}" method="post"
                                                         th:action="@{/student/exam/{examId}/register(examId=${e.id})}">
                                                         <input type="hidden" name="courseId"
                                                             th:value="${selectedCourseId}" />
@@ -224,6 +225,13 @@
                                                         <button class="btn btn-accent btn-mini"
                                                             type="submit">Iscriviti</button>
                                                     </form>
+
+                                                    <span class="pill" th:if="${role != null and role.name() == 'STUDENT'
+                                                        and (registeredExamIds == null or !registeredExamIds.contains(e.id))
+                                                        and !#temporals.createNow().isBefore(e.date)}">
+                                                        Iscrizioni chiuse
+                                                    </span>
+
 
                                                 </div>
                                             </div>
@@ -248,7 +256,7 @@
                 <section class="card mini side-card">
                     <h3>Tips</h3>
                     <p class="note">
-                        Usa la sezione <strong>Dettagli</strong> per vedere percorso, semestre e iscritti. 
+                        Usa la sezione <strong>Dettagli</strong> per vedere percorso, semestre e iscritti.
                         <br>Gli appelli compaiono solo alla selezione del bottone
                         <strong>Visualizza Appelli</strong>
                     </p>
