@@ -196,13 +196,12 @@
                         </thead>
 
                         <tbody>
-                            <th:block th:each="r : ${registrations}"
-                                th:with="isEditing=${editStudentNumber != null and editStudentNumber == r.student.number},
+                            <th:block th:each="r : ${registrations}" th:with="isEditing=${editStudentNumber != null and editStudentNumber == r.student.number},
                                     s=${#strings.toLowerCase(#strings.trim(r.status))},
                                     canEditRow=${s == 'non inserito' or s == 'inserito'}">
 
                                 <!-- Riga normale -->
-                                <tr>
+                                <tr th:id="|row-${r.student.number}|">
                                     <td class="mono" th:text="${r.student.number}">000000</td>
                                     <td th:text="${r.student.surname}">Rossi</td>
                                     <td th:text="${r.student.name}">Mario</td>
@@ -231,13 +230,13 @@
                                     <td class="actions-cell">
                                         <!-- open -->
                                         <a class="btn btn-accent btn-sm" th:if="${!isEditing and canEditRow}"
-                                            th:href="@{/professor/exam(examId=${examId}, sort=${sortKey}, sortDir=${sortDir}, editStudentNumber=${r.student.number})}">
+                                            th:href="@{/professor/exam(examId=${examId}, sort=${sortKey}, sortDir=${sortDir}, editStudentNumber=${r.student.number})} + '#row-' + ${r.student.number}">
                                             <span class="icon"></span> MODIFICA
                                         </a>
 
                                         <!-- close -->
                                         <a class="btn btn-sm btn-ghost" th:if="${isEditing}"
-                                            th:href="@{/professor/exam(examId=${examId}, sort=${sortKey}, sortDir=${sortDir})}">
+                                            th:href="@{/professor/exam(examId=${examId}, sort=${sortKey}, sortDir=${sortDir})} + '#row-' + ${r.student.number}">
                                             Chiudi
                                         </a>
 
@@ -268,7 +267,6 @@
                                                 <input type="hidden" name="studentNumber"
                                                     th:value="${r.student.number}" />
 
-                                                <!-- per tornare mantenendo sorting -->
                                                 <input type="hidden" name="sort" th:value="${sortKey}" />
                                                 <input type="hidden" name="sortDir" th:value="${sortDir}" />
 
@@ -317,7 +315,7 @@
                                                 <div class="edit-actions">
                                                     <button class="btn btn-accent" type="submit">Salva</button>
                                                     <a class="btn btn-ghost"
-                                                        th:href="@{/professor/exam(examId=${examId}, sort=${sortKey}, sortDir=${sortDir})}">
+                                                        th:href="@{/professor/exam(examId=${examId}, sort=${sortKey}, sortDir=${sortDir})} + '#row-' + ${r.student.number}">
                                                         Annulla
                                                     </a>
                                                 </div>

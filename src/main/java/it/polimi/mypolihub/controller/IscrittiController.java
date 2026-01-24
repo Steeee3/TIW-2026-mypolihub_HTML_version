@@ -93,6 +93,7 @@ public class IscrittiController {
     public String editResult(
             @PathVariable Integer registrationId,
             @RequestParam Integer resultId,
+            @RequestParam(name = "studentNumber", required = false) Integer studentNumber,
             @RequestParam(name = "examId", required = false) Integer examId,
             @RequestParam(name = "sort", required = false) String sort,
             @RequestParam(name = "sortDir", required = false) String sortDir,
@@ -109,6 +110,9 @@ public class IscrittiController {
 
         addRedirectAttributes(examId, sort, sortDir, ra);
 
+        if (studentNumber != null) {
+            return "redirect:/professor/exam#row-" + studentNumber;
+        }
         return "redirect:/professor/exam";
     }
 
