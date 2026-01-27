@@ -103,7 +103,7 @@
 
                             <div class="course-head">
                                 <div class="course-head-left">
-                                    <h3 class="course-name" th:text="${c.name}">Nome corso</h3>
+                                    <h3 class="course-name" th:text="|${c.name} [${c.year}]|">Nome corso</h3>
 
                                     <div class="course-badges">
                                         <span class="badge">
@@ -121,6 +121,13 @@
                                             <span class="chip-ico orange"></span>
                                             <span
                                                 th:text="${c.professor != null ? (c.professor.name + ' ' + c.professor.surname) : '—'}">Docente</span>
+                                        </span>
+
+                                        <span class="badge badge-soft">
+                                            <span class="chip-ico purple"></span>
+                                            <span th:text="${c.year != null ? c.year : '—'}">
+                                                Anno
+                                            </span>
                                         </span>
 
                                         <!-- LOAD REPORTS ONLY WHEN CLICKED -->
